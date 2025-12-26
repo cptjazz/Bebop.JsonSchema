@@ -1,0 +1,36 @@
+name: Pack and Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Pack NuGet package
+      run: dotnet pack Bebop.JsonSchema/Bebop.JsonSchema.csproj --no-build --configuration Release --output ./nupkg
+    
+    - name: Upload NuGet package artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./nupkg/
+    
+    - name: Push to NuGet
+      run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      if: secrets.NUGET_API_KEY != ''
