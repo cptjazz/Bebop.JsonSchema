@@ -9,9 +9,9 @@ internal sealed class LocalSchemaRegistry : SchemaRegistry
 
     static LocalSchemaRegistry()
     {
-        foreach (var schema in DefaultSchemas.Get())
+        //foreach (var schema in DefaultSchemas.Get())
         {
-            _defaultSchemas[schema.Id.AbsoluteUri] = schema;
+         //   _defaultSchemas[schema.Id.AbsoluteUri] = schema;
         }
     }
 

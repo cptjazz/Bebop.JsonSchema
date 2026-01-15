@@ -20,13 +20,14 @@ public sealed class JsonSchema
     }
 
 
-    internal JsonSchema(Uri id, SchemaRegistry repository, Anchors anchors, bool isAnonymous)
+    internal JsonSchema(Uri id, SchemaRegistry repository, Anchors anchors, bool isAnonymous, Dialect dialect)
     {
         Id = id;
         Repository = repository;
         Anchors = anchors;
         IsAnonymous = isAnonymous;
         RootAssertion = AnyTypeAssertion.Instance;
+        Dialect = dialect;
     }
     
     internal Assertion RootAssertion { get; set; }
@@ -44,6 +45,10 @@ public sealed class JsonSchema
     public string? Description { get; internal set; }
 
     internal JsonPointer Path { get; set; }
+
+    internal IReadOnlySet<Uri>? Vocabulary { get; set; }
+
+    internal Dialect Dialect { get; }
 
     internal string DebuggerDisplay => $"{Path}";
 

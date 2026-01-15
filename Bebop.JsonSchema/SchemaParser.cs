@@ -15,21 +15,35 @@ internal static class SchemaParser
             isAnon = retrievalUri is null;
             id = retrievalUri ?? repo.MakeRandomUri();
         }
-        // todo: Assert $schema is compatible
 
         Assume
             .That(id.IsAbsoluteUri)
             .OtherwiseThrow(() => new InvalidSchemaException("Schema Root-ID must be an absolute URI.", element));
 
-        var js = new JsonSchema(id, repo, anchors, isAnon);
-        js.RootAssertion = _ParseAssertions(element, anchors, js, js, JsonPointer.Root);
+
+        var schemaUri = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("$schema", out var schemaElement)
+            ? new Uri(schemaElement.ExpectString(), UriKind.Absolute)
+            : Dialect.DefaultDialectUri;
+
+        var dialect = Dialect.Get(schemaUri) ??
+            (repo.TryGetSchema(schemaUri, out var ds)
+                ? Dialect.FromSchema(ds)
+                : throw new InvalidSchemaException("Unable to find custom meta-schema"));
+
+        var js = new JsonSchema(id, repo, anchors, isAnon, dialect);
+        js.RootAssertion = _ParseAssertions(element, anchors, js, js, JsonPointer.Root, dialect);
         _AddMetaInfo(js, element);
         js.Path = JsonPointer.Root;
 
         return js;
     }
 
-    internal static JsonSchema ParseSchema(JsonElement element, JsonSchema outerSchema, JsonSchema baseSchema, JsonPointer pathToBase)
+    internal static JsonSchema ParseSchema(
+        JsonElement element, 
+        JsonSchema outerSchema, 
+        JsonSchema baseSchema, 
+        JsonPointer pathToBase,
+        Dialect baseDialect)
     {
         var repo = outerSchema.Repository;
         var anchors = outerSchema.Anchors;
@@ -48,16 +62,25 @@ internal static class SchemaParser
             Assume.That(result).OtherwiseThrow(() => new InvalidSchemaException("Invalid schema ID.", element));
         }
 
-        // Assert $schema is compatible
+        var dialect = baseDialect;
 
+        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("$schema", out var schemaElement))
+        {
+            var schemaUri = new Uri(schemaElement.ExpectString(), UriKind.Absolute);
 
+            dialect = Dialect.Get(schemaUri) ??
+                (repo.TryGetSchema(schemaUri, out var ds)
+                    ? Dialect.FromSchema(ds)
+                    : throw new InvalidSchemaException("Unable to find custom meta-schema"));
+        }
+        
         if (isNamed)
         {
             anchors = new Anchors();
             pathToBase = JsonPointer.Root;
         }
 
-        var js = new JsonSchema(id!, repo, anchors, !isNamed);
+        var js = new JsonSchema(id!, repo, anchors, !isNamed, dialect);
 
         if (isNamed)
         {
@@ -66,7 +89,7 @@ internal static class SchemaParser
             baseSchema = js;
         }
 
-        js.RootAssertion = _ParseAssertions(element, anchors, js, baseSchema, pathToBase);
+        js.RootAssertion = _ParseAssertions(element, anchors, js, baseSchema, pathToBase, dialect);
         _AddMetaInfo(js, element);
         
         js.Path = pathToBase;
@@ -81,13 +104,14 @@ internal static class SchemaParser
         Anchors anchors,
         JsonSchema outerSchema, 
         JsonSchema baseSchema,
-        JsonPointer pathToBase)
+        JsonPointer pathToBase,
+        Dialect dialect)
     {
         return element.ValueKind switch
         {
             JsonValueKind.False => NoneTypeAssertion.Instance,
             JsonValueKind.True => AnyTypeAssertion.Instance,
-            JsonValueKind.Object => _ParseAssertionsCore(element, anchors, outerSchema, baseSchema, pathToBase),
+            JsonValueKind.Object => _ParseAssertionsCore(element, anchors, outerSchema, baseSchema, pathToBase, dialect),
 
             _ => throw new InvalidSchemaException("Schema must be an object, true, or false.", element)
         };
@@ -98,10 +122,10 @@ internal static class SchemaParser
         Anchors anchors,
         JsonSchema outerSchema,
         JsonSchema baseSchema,
-        JsonPointer pathToBase)
+        JsonPointer pathToBase,
+        Dialect dialect)
     {
         var assertions = new List<Assertion>();
-
 
         foreach (var property in element.EnumerateObject())
         {
@@ -109,113 +133,117 @@ internal static class SchemaParser
             var propertyValue = property.Value;
 
             var ptb = pathToBase.AppendPropertyName(propertyName);
+            var isKeyword = dialect.SupportedKeywords.Contains(propertyName);
 
-            var assertion = propertyName switch
-            {
-                "$id" or "$schema" or "$comment" or "description" or "title" => null, // ignored for validation purposes
-
-                "type" => propertyValue switch
+            var assertion = isKeyword
+                ? propertyName switch
                 {
-                    { ValueKind: JsonValueKind.String } => _GetAssertionForType(propertyValue.ExpectString(), element),
-                    { ValueKind: JsonValueKind.Array } => new OrCombinedAssertion(
-                        propertyValue
-                            .EnumerateArray()
-                            .Select(e => _GetAssertionForType(e.ExpectString(), element))
+                    "$id" or "$schema" or "$comment" or "description" or "title" => null, // ignored for validation purposes
+
+                    "type" => propertyValue switch
+                    {
+                        { ValueKind: JsonValueKind.String } => _GetAssertionForType(propertyValue.ExpectString(), element),
+                        { ValueKind: JsonValueKind.Array } => new OrCombinedAssertion(
+                            propertyValue
+                                .EnumerateArray()
+                                .Select(e => _GetAssertionForType(e.ExpectString(), element))
+                                .ToArray()
+                        ),
+                        _ => throw new InvalidSchemaException("Illegal type property.", element)
+                    },
+                    "const" => new ConstAssertion(propertyValue),
+
+                    "not" => new NotAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "allOf" => new AllOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
+                    "anyOf" => new AnyOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
+                    "oneOf" => new OneOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
+                    "enum" => new EnumAssertion(propertyValue.ExpectArray().ToArray()),
+                    "$ref" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, false),
+                    "$dynamicRef" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, true),
+                    "$anchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, false),
+                    "$dynamicAnchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, true),
+
+                    // String specific
+                    "minLength" => new MinLengthAssertion(property.ExpectNonNegativeCount()),
+                    "maxLength" => new MaxLengthAssertion(property.ExpectNonNegativeCount()),
+                    "pattern" => new PatternAssertion(property.ExpectString()),
+
+                    // Array specific
+                    "minItems" => new MinItemsAssertion(property.ExpectNonNegativeCount()),
+                    "maxItems" => new MaxItemsAssertion(property.ExpectNonNegativeCount()),
+                    "uniqueItems" => property.ExpectBoolean()
+                        ? UniqueItemsAssertion.Instance
+                        : null,
+                    "contains" => new ContainsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect), _GetMinContains(element), _GetMaxContains(element)),
+                    "maxContains" or "minContains" => null, // Fetched by 'contains' already.
+                    "items" => new ItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "prefixItems" => new PrefixItemsAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
+                    "unevaluatedItems" => new UnevaluatedItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+
+                    // Number specific
+                    "minimum" => new MinimumPropertyAssertion(property.ExpectNumber()),
+                    "maximum" => new MaximumPropertyAssertion(property.ExpectNumber()),
+                    "exclusiveMinimum" => new ExclusiveMinimumPropertyAssertion(property.ExpectNumber()),
+                    "exclusiveMaximum" => new ExclusiveMaximumPropertyAssertion(property.ExpectNumber()),
+                    "multipleOf" => new MultipleOfAssertion(property.ExpectNumber()),
+
+                    // Object specific
+                    "minProperties" => new MinPropertiesAssertion(property.ExpectNonNegativeCount()),
+                    "maxProperties" => new MaxPropertiesPropertyAssertion(property.ExpectNonNegativeCount()),
+                    "required" => new RequiredAssertion(
+                        property
+                            .ExpectArray()
+                            .Select(e => e.ExpectString())
                             .ToArray()
                     ),
-                    _ => throw new InvalidSchemaException("Illegal type property.", element)
-                },
-                "const" => new ConstAssertion(propertyValue),
-
-                "not" => new NotAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-                "allOf" => new AllOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i))).ToArray()),
-                "anyOf" => new AnyOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i))).ToArray()),
-                "oneOf" => new OneOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i))).ToArray()),
-                "enum" => new EnumAssertion(propertyValue.ExpectArray().ToArray()),
-                "$ref" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, false),
-                "$dynamicRef" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, true),
-                "$anchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, false),
-                "$dynamicAnchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, true),
-
-                // String specific
-                "minLength" => new MinLengthAssertion(property.ExpectNonNegativeCount()),
-                "maxLength" => new MaxLengthAssertion(property.ExpectNonNegativeCount()),
-                "pattern" => new PatternAssertion(property.ExpectString()),
-
-                // Array specific
-                "minItems" => new MinItemsAssertion(property.ExpectNonNegativeCount()),
-                "maxItems" => new MaxItemsAssertion(property.ExpectNonNegativeCount()),
-                "uniqueItems" => property.ExpectBoolean()
-                    ? UniqueItemsAssertion.Instance
-                    : null,
-                "contains" => new ContainsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb), _GetMinContains(element), _GetMaxContains(element)),
-                "maxContains" or "minContains" => null, // Fetched by 'contains' already.
-                "items" => new ItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-                "prefixItems" => new PrefixItemsAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i))).ToArray()),
-                "unevaluatedItems" => new UnevaluatedItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-
-                // Number specific
-                "minimum" => new MinimumPropertyAssertion(property.ExpectNumber()),
-                "maximum" => new MaximumPropertyAssertion(property.ExpectNumber()),
-                "exclusiveMinimum" => new ExclusiveMinimumPropertyAssertion(property.ExpectNumber()),
-                "exclusiveMaximum" => new ExclusiveMaximumPropertyAssertion(property.ExpectNumber()),
-                "multipleOf" => new MultipleOfAssertion(property.ExpectNumber()),
-
-                // Object specific
-                "minProperties" => new MinPropertiesAssertion(property.ExpectNonNegativeCount()),
-                "maxProperties" => new MaxPropertiesPropertyAssertion(property.ExpectNonNegativeCount()),
-                "required" => new RequiredAssertion(
-                    property
-                        .ExpectArray()
-                        .Select(e => e.ExpectString())
-                        .ToArray()
-                ),
-                "properties" => new PropertiesAssertion(
-                    propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
+                    "properties" => new PropertiesAssertion(
+                        propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
+                            x => x.Name,
+                            x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name), dialect))),
+                    "propertyNames" => new PropertyNamesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "patternProperties" => new PatternPropertiesAssertion(
+                        propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
+                            x => x.Name,
+                            x => ParseSchema(x.Value, outerSchema, baseSchema, ptb, dialect))),
+                    "dependentRequired" => new DependentRequiredAssertion(
+                        property.ExpectObject().EnumerateObject().ToFrozenDictionary(
                         x => x.Name,
-                        x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name)))),
-                "propertyNames" => new PropertyNamesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-                "patternProperties" => new PatternPropertiesAssertion(
-                    propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
-                        x => x.Name,
-                        x => ParseSchema(x.Value, outerSchema, baseSchema, ptb))),
-                "dependentRequired" => new DependentRequiredAssertion(
-                    property.ExpectObject().EnumerateObject().ToFrozenDictionary(
-                    x => x.Name,
-                    x => x.Value.ExpectArray().Select(
-                        a => a.ExpectString()).ToArray())),
-                "additionalProperties" => new AdditionalPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-                "unevaluatedProperties" => new UnevaluatedPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb)),
-                "default" => null,
+                        x => x.Value.ExpectArray().Select(
+                            a => a.ExpectString()).ToArray())),
+                    "additionalProperties" => new AdditionalPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "unevaluatedProperties" => new UnevaluatedPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "default" => null,
 
-                // Conditional
-                "if" => new ConditionalAssertion(
-                    ParseSchema(propertyValue, outerSchema, baseSchema, ptb),
-                    _GetThen(element, outerSchema, baseSchema, pathToBase),
-                    _GetElse(element, outerSchema, baseSchema, pathToBase)),
+                    // Conditional
+                    "if" => new ConditionalAssertion(
+                        ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
+                        _GetThen(element, outerSchema, baseSchema, pathToBase, dialect),
+                        _GetElse(element, outerSchema, baseSchema, pathToBase, dialect)),
 
-                "then" or "else" => element.TryGetProperty("if", out _) 
-                    ? null 
-                    : _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb),
+                    "then" or "else" => element.TryGetProperty("if", out _)
+                        ? null
+                        : _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
 
-                // Content
-                "contentSchema"or "contentEncoding" or "contentMediaType" => null,
+                    // Content
+                    "contentSchema" or "contentEncoding" or "contentMediaType" => null,
 
-                // DependentSchema
-                "dependentSchemas" => new DependentSchemaAssertion(
-                    propertyValue.ExpectObject().EnumerateObject().ToDictionary(
-                        x => x.Name,
-                        x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name)))),
+                    // DependentSchema
+                    "dependentSchemas" => new DependentSchemaAssertion(
+                        propertyValue.ExpectObject().EnumerateObject().ToDictionary(
+                            x => x.Name,
+                            x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name), dialect))),
 
-                // Format
-                "format" => new FormatAssertion(Formats.Get(propertyValue.ExpectString())),
+                    // Format
+                    "format" => null, // TODO: new FormatAssertion(Formats.Get(propertyValue.ExpectString())),
 
-                "dependencies" => null,
-                // Vocabulary
-                //"$vocabulary" => _ParseVocabulary(propertyValue.ExpectObject(), validVocabularies),
+                    "dependencies" => null,
 
-                _ => _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb),
-            };
+                    // Vocabulary
+                    "$vocabulary" => _ParseVocabulary(propertyValue.ExpectObject(), baseSchema),
+
+                    _ => _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
+                }
+            : _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect, true);
 
             if (assertion is not null)
             {
@@ -242,18 +270,22 @@ internal static class SchemaParser
         return AndCombinedAssertion.From(finalAssertions);
     }
 
-    private static Assertion? _ParseVocabulary(JsonElement propertyValue, HashSet<Uri> validVocabularies)
+    private static Assertion? _ParseVocabulary(JsonElement propertyValue, JsonSchema baseSchema)
     {
+        HashSet<Uri> validVocabularies = new();
+
         foreach (var vocab in propertyValue.ExpectObject().EnumerateObject())
         {
             var vocabUri = new Uri(vocab.Name, UriKind.Absolute);
             var isRequired = vocab.Value.ExpectBoolean();
 
-            if (!isRequired)
+            if (isRequired)
             {
-                validVocabularies.Remove(vocabUri);
+                validVocabularies.Add(vocabUri);
             }
         }
+
+        baseSchema.Vocabulary = validVocabularies;
 
         return null;
     }
@@ -274,18 +306,28 @@ internal static class SchemaParser
         }
     }
 
-    private static JsonSchema _GetThen(JsonElement element, JsonSchema outerSchema, JsonSchema baseSchema, JsonPointer pathToBase)
+    private static JsonSchema _GetThen(
+        JsonElement element, 
+        JsonSchema outerSchema, 
+        JsonSchema baseSchema, 
+        JsonPointer pathToBase,
+        Dialect dialect)
     {
         if (element.TryGetProperty("then", out var value))
-            return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("then"));
+            return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("then"), dialect);
 
         return JsonSchema.True;
     }
 
-    private static JsonSchema _GetElse(JsonElement element, JsonSchema outerSchema, JsonSchema baseSchema, JsonPointer pathToBase)
+    private static JsonSchema _GetElse(
+        JsonElement element, 
+        JsonSchema outerSchema, 
+        JsonSchema baseSchema, 
+        JsonPointer pathToBase,
+        Dialect dialect)
     {
         if (element.TryGetProperty("else", out var value))
-            return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("else"));
+            return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("else"), dialect);
         
         return JsonSchema.True;
     }
@@ -318,9 +360,25 @@ internal static class SchemaParser
         return null;
     }
 
-    private static Assertion? _ParseSubSchema(JsonElement element, JsonSchema outerSchema, JsonSchema baseSchema, JsonPointer pathToBase)
+    private static Assertion? _ParseSubSchema(
+        JsonElement element, 
+        JsonSchema outerSchema, 
+        JsonSchema baseSchema, 
+        JsonPointer pathToBase,
+        Dialect dialect,
+        bool tolerateInvalidSchema = false)
     {
-        ParseSchema(element, outerSchema, baseSchema, pathToBase);
+        if (tolerateInvalidSchema)
+        {
+            if (element.ValueKind != JsonValueKind.Object &&
+                element.ValueKind != JsonValueKind.True &&
+                element.ValueKind != JsonValueKind.False)
+            {
+                return null;
+            }
+        }
+
+        ParseSchema(element, outerSchema, baseSchema, pathToBase, dialect);
         return null;
     }
 
