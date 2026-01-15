@@ -54,7 +54,7 @@ public class Test_Draft202012
     [ClassData(typeof(Draft202012OptionalTestData))]
     public void OptionalTestCases(TestData data)
     {
-        var repo = SchemaRegistry.Resolving();
+        var repo = SchemaRegistry.Custom(new SchemaResolver());
         var jsonSchema = JsonSchema.Create(data.Schema, repo);
         var errorCollection = new ErrorCollection();
         var result = jsonSchema.Validate(data.Data, errorCollection);
