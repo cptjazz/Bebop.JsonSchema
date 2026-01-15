@@ -1,6 +1,8 @@
-﻿namespace Tests.MyJsonSchema;
+﻿using Tests.Bebop.JsonSchema.Infrastructure;
 
-public class Draft202012
+namespace Tests.MyJsonSchema;
+
+public class Test_Draft202012
 {
     private sealed class SchemaResolver : ISchemaResolver
     {
@@ -60,9 +62,8 @@ public class Draft202012
         Assert.Equal(data.ExpectedValid, result);
     }
 
-
-    [Fact]
-    public async Task ttt()
+    [Fact(Skip = "For debug only")]
+    public async Task DebuggableTest()
     {
         var json="""
                  {
@@ -83,76 +84,6 @@ public class Draft202012
                              "data": {
                                  "numberProperty": 1
                              },
-                             "valid": true
-                         }
-                     ]
-                 }
-                 """;
-        
-        using var doc = JsonDocument.Parse(json);
-
-        var repo = SchemaRegistry.Custom(new SchemaResolver());
-        var root = doc.RootElement;
-
-        var schemaJson = root.GetProperty("schema");
-        var schema = JsonSchema.Create(schemaJson, repo);
-        await schema.Prepare();
-
-        foreach (var test in root.GetProperty("tests").EnumerateArray())
-        {
-            var data = test.GetProperty("data");
-            var expected = test.GetProperty("valid").GetBoolean();
-
-            var errorCollection = new ErrorCollection();
-            var result = schema.Validate(data, errorCollection);
-            Assert.Equal(expected, result);
-        }
-    }
-
-    [Fact]
-    public async Task ttt2()
-    {
-        var json= """
-                 {
-                     "description": "single dependency",
-                     "schema": {
-                         "$schema": "https://json-schema.org/draft/2020-12/schema",
-                         "dependencies": {"bar": ["foo"]}
-                     },
-                     "tests": [
-                         {
-                             "description": "neither",
-                             "data": {},
-                             "valid": true
-                         },
-                         {
-                             "description": "nondependant",
-                             "data": {"foo": 1},
-                             "valid": true
-                         },
-                         {
-                             "description": "with dependency",
-                             "data": {"foo": 1, "bar": 2},
-                             "valid": true
-                         },
-                         {
-                             "description": "missing dependency",
-                             "data": {"bar": 2},
-                             "valid": false
-                         },
-                         {
-                             "description": "ignores arrays",
-                             "data": ["bar"],
-                             "valid": true
-                         },
-                         {
-                             "description": "ignores strings",
-                             "data": "foobar",
-                             "valid": true
-                         },
-                         {
-                             "description": "ignores other non-objects",
-                             "data": 12,
                              "valid": true
                          }
                      ]

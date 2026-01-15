@@ -1,4 +1,4 @@
-﻿namespace Tests.MyJsonSchema;
+﻿namespace Tests.Bebop.JsonSchema.Infrastructure;
 
 public class TestDataBase
 {

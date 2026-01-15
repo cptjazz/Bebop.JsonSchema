@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Tests.Bebop.JsonSchema.Infrastructure;
 
 namespace Tests.MyJsonSchema;
 
