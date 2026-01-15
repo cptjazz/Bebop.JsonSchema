@@ -12,14 +12,13 @@ internal static class DefaultSchemas
         yield return _Get("Draft202012.format-annotation.json");
         yield return _Get("Draft202012.meta-data.json");
         yield return _Get("Draft202012.schema.json");
-
     }
 
     private static JsonSchema _Get(string file)
     {
         using var stream = typeof(DefaultSchemas)
             .Assembly
-            .GetManifestResourceStream($"MyJsonSchema.Schemas.{file}");
+            .GetManifestResourceStream($"Bebop.JsonSchema.Schemas.{file}");
 
         using var doc = JsonDocument.Parse(stream!);
 
