@@ -14,12 +14,12 @@ internal sealed class MinItemsAssertion(int minItems) : ArrayAssertion
         if (!(count < minItems)) 
             return true;
         
-        return _AddError(errorCollection, array, minItems);
+        return _AddError(errorCollection, array);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static bool _AddError(ErrorCollection ec, in Token e, int m)
+        bool _AddError(ErrorCollection ec, in Token e)
         {
-            ec.AddError($"Array must have at least '{m}' items", e);
+            ec.AddError($"Array must have at least '{minItems}' items", e);
             return false;
         }
     }

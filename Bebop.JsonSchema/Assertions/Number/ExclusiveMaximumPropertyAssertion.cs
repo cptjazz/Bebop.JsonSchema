@@ -1,4 +1,6 @@
-﻿namespace Bebop.JsonSchema.Assertions.Number;
+﻿using System.Runtime.CompilerServices;
+
+namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ExclusiveMaximumPropertyAssertion(double exclusiveMaximum) : NumberPropertyAssertion
@@ -10,9 +12,10 @@ internal sealed class ExclusiveMaximumPropertyAssertion(double exclusiveMaximum)
         if (!(value >= exclusiveMaximum)) 
             return true;
 
-        return _AddError(element, errorCollection);
+        return _AddError(errorCollection, element);
 
-        bool _AddError(in Token e, ErrorCollection ec)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        bool _AddError(ErrorCollection ec, in Token e)
         {
             ec.AddError($"Value is not less than expected exclusive maximum '{exclusiveMaximum}'.", e);
             return false;

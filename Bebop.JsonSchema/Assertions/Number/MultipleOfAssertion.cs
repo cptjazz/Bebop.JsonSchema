@@ -1,4 +1,6 @@
-﻿namespace Bebop.JsonSchema.Assertions.Number;
+﻿using System.Runtime.CompilerServices;
+
+namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MultipleOfAssertion(double multipleOf) : NumberPropertyAssertion
@@ -20,6 +22,7 @@ internal sealed class MultipleOfAssertion(double multipleOf) : NumberPropertyAss
 
         return _AddError(errorCollection, element);
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         bool _AddError(ErrorCollection ec, Token e)
         {
             ec.AddError($"Value is not a multiple of {multipleOf}.", e);

@@ -1,6 +1,4 @@
-﻿using System.Collections.Frozen;
-
-namespace Bebop.JsonSchema;
+﻿namespace Bebop.JsonSchema;
 
 internal abstract class Dialect
 {

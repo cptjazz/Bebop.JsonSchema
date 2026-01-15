@@ -14,12 +14,12 @@ internal sealed class MaxItemsAssertion(int maxItems) : ArrayAssertion
         if (!(count > maxItems)) 
             return true;
         
-        return _AddError(errorCollection, array, maxItems);
+        return _AddError(errorCollection, array);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static bool _AddError(ErrorCollection ec, in Token e, int m)
+        bool _AddError(ErrorCollection ec, in Token e)
         {
-            ec.AddError($"Array must have at most '{m}' items", e);
+            ec.AddError($"Array must have at most '{maxItems}' items", e);
             return false;
         }
     }

@@ -9,4 +9,3 @@ global using Bebop.JsonSchema.Assertions.Number;
 global using Bebop.JsonSchema.Assertions.Object;
 global using Bebop.JsonSchema.Assertions.String;
 global using Bebop.JsonSchema.Assertions.Type;
-global using Bebop.JsonSchema.Schemas;

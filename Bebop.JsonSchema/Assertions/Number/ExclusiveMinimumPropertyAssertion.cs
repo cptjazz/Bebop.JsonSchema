@@ -1,4 +1,6 @@
-﻿namespace Bebop.JsonSchema.Assertions.Number;
+﻿using System.Runtime.CompilerServices;
+
+namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ExclusiveMinimumPropertyAssertion(double exclusiveMinimum) : NumberPropertyAssertion
@@ -12,6 +14,7 @@ internal sealed class ExclusiveMinimumPropertyAssertion(double exclusiveMinimum)
 
         return _AddError(errorCollection, element);
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         bool _AddError(ErrorCollection ec, Token e)
         {
             ec.AddError($"Value is not greater than expected exclusive minimum '{exclusiveMinimum}'.", e);

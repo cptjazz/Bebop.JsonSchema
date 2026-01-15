@@ -1,4 +1,6 @@
-﻿namespace Bebop.JsonSchema.Assertions.Applicator;
+﻿using System.Runtime.CompilerServices;
+
+namespace Bebop.JsonSchema.Assertions.Applicator;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class NotAssertion(JsonSchema schema) : Assertion
@@ -16,7 +18,13 @@ internal sealed class NotAssertion(JsonSchema schema) : Assertion
             return true;
         }
 
-        errorCollection.AddError("Element matches schema in 'not' assertion.", element);
-        return false;
+        return _AddError(errorCollection, element);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static bool _AddError(ErrorCollection ec, in Token e)
+        {
+            ec.AddError("Element matches schema in 'not' assertion.", e);
+            return false;
+        }
     }
 }

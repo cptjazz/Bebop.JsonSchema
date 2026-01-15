@@ -7,11 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="Schemas\*\*.json" />
-	  <EmbeddedResource Include="Schemas\*\*.json" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<InternalsVisibleTo Include="Tests.Bebop.JsonSchema" />
 	</ItemGroup>
 </Project>
