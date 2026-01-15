@@ -1,13 +1,13 @@
-﻿using Tests.Bebop.JsonSchema.Infrastructure;
+using Tests.Bebop.JsonSchema.Infrastructure;
 
 namespace Tests.MyJsonSchema;
 
-public class Test_Draft202012
+public class Test_Draft201909
 {
     private static readonly CachingSchemaResolver SchemaResolver = new();
 
     [Theory]
-    [ClassData(typeof(Draft202012TestData))]
+    [ClassData(typeof(Draft201909TestData))]
     public void RequiredTestCases(TestData data)
     {
         var repo = SchemaRegistry.Custom(SchemaResolver);
@@ -19,7 +19,7 @@ public class Test_Draft202012
     }
 
     [Theory]
-    [ClassData(typeof(Draft202012OptionalTestData))]
+    [ClassData(typeof(Draft201909OptionalTestData))]
     public void OptionalTestCases(TestData data)
     {
         var repo = SchemaRegistry.Custom(SchemaResolver);
@@ -38,7 +38,7 @@ public class Test_Draft202012
                      "description": "schema that uses custom metaschema with with no validation vocabulary",
                      "schema": {
                          "$id": "https://schema/using/no/validation",
-                         "$schema": "http://localhost:1234/draft2020-12/metaschema-no-validation.json",
+                         "$schema": "http://localhost:1234/draft2019-09/metaschema-no-validation.json",
                          "properties": {
                              "badProperty": false,
                              "numberProperty": {
@@ -67,13 +67,15 @@ public class Test_Draft202012
         var schema = JsonSchema.Create(schemaJson, repo);
         await schema.Prepare();
 
-        foreach (var test in root.GetProperty("tests").EnumerateArray())
+        var tests = root.GetProperty("tests");
+        foreach (var test in tests.EnumerateArray())
         {
             var data = test.GetProperty("data");
             var expected = test.GetProperty("valid").GetBoolean();
 
             var errorCollection = new ErrorCollection();
             var result = schema.Validate(data, errorCollection);
+
             Assert.Equal(expected, result);
         }
     }
