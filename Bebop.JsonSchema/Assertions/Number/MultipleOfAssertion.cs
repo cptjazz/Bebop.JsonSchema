@@ -10,6 +10,12 @@ internal sealed class MultipleOfAssertion(double multipleOf) : NumberAssertion
     protected override bool Assert(double value, in Token element, ErrorCollection errorCollection)
     {
         var quotient = value / multipleOf;
+
+        if (double.IsInfinity(quotient))
+        {
+            return _DecimalFallback(value, element, errorCollection);
+        }
+
         var remainder = Math.Abs(quotient - Math.Round(quotient));
         
         // Use epsilon tolerance for floating-point comparison
@@ -27,6 +33,24 @@ internal sealed class MultipleOfAssertion(double multipleOf) : NumberAssertion
         {
             ec.AddError($"Value is not a multiple of {multipleOf}.", e);
             return false;
+        }
+
+        bool _DecimalFallback(double value, Token element, ErrorCollection errorCollection)
+        {
+            // Use decimal arithmetic when double overflows
+            try
+            {
+                var decValue = (decimal)value;
+                var decMultipleOf = (decimal)multipleOf;
+                if (decMultipleOf != 0m && decValue % decMultipleOf == 0m)
+                    return true;
+            }
+            catch (OverflowException)
+            {
+                // If decimal can't hold the value either, fall through to error
+            }
+
+            return _AddError(errorCollection, element);
         }
     }
 }

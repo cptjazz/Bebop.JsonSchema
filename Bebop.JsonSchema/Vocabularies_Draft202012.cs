@@ -12,6 +12,8 @@ internal static class Vocabularies_Draft202012
 
     public const string FormatAnnotation = "https://json-schema.org/draft/2020-12/vocab/format-annotation";
 
+    public const string FormatAssertion = "https://json-schema.org/draft/2020-12/vocab/format-assertion";
+
     public const string Content = "https://json-schema.org/draft/2020-12/vocab/content";
 
     public const string Unevaluated = "https://json-schema.org/draft/2020-12/vocab/unevaluated";

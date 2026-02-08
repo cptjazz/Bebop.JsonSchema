@@ -119,6 +119,7 @@ internal sealed class Dialect_Draft202012 : Dialect
             Vocabularies_Draft202012.Applicator => ApplicatorKeywords,
             Vocabularies_Draft202012.Content => ContentKeywords,
             Vocabularies_Draft202012.FormatAnnotation => FormatAnnotationKeywords,
+            Vocabularies_Draft202012.FormatAssertion => FormatAnnotationKeywords,
             Vocabularies_Draft202012.Metadata => MetaDataKeywords,
             Vocabularies_Draft202012.Unevaluated => UnevaluatedKeywords,
             Vocabularies_Draft202012.Validation => ValidationKeywords,

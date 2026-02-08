@@ -9,7 +9,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
     private readonly FrozenDictionary<string, Regex> _regexes = properties
         .ToFrozenDictionary(
             x => x.Key, 
-            x => new Regex(x.Key, RegexOptions.Compiled));
+            x => new Regex(x.Key, RegexOptions.Compiled | RegexOptions.ECMAScript));
 
     public override string[] AssociatedKeyword => ["patternProperties"];
 
