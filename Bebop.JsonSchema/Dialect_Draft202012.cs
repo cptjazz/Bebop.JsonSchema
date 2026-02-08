@@ -40,6 +40,7 @@ internal sealed class Dialect_Draft202012 : Dialect
         "additionalProperties",
         "dependentSchemas",
         "propertyNames",
+        "dependencies",
     };
 
     public IReadOnlySet<string> ContentKeywords { get; } = new HashSet<string>

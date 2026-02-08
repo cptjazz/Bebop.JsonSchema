@@ -140,8 +140,9 @@ internal static class SchemaParser
             var assertion = isKeyword
                 ? propertyName switch
                 {
-                    "$id" or "$schema" or "$comment" or "description" or "title" => null, // ignored for validation purposes
-
+                    "$id" or "$schema" or "$comment" or "description" or "title"
+                        or "deprecated" or "readOnly" or "writeOnly" or "examples" => null, // ignored for validation purposes
+                    
                     "type" => propertyValue switch
                     {
                         { ValueKind: JsonValueKind.String } => _GetAssertionForType(propertyValue.ExpectString(), element),
@@ -240,7 +241,7 @@ internal static class SchemaParser
                     // Format
                     "format" => null, // TODO: new FormatAssertion(Formats.Get(propertyValue.ExpectString())),
 
-                    "dependencies" => null,
+                    "dependencies" => await _ParseDependencies(propertyValue, outerSchema, baseSchema, ptb, dialect),
 
                     // Vocabulary
                     "$vocabulary" => _ParseVocabulary(propertyValue.ExpectObject(), baseSchema),
@@ -390,6 +391,49 @@ internal static class SchemaParser
             anchors.AddNamedAnchor(anchorUri, outerSchema);
 
         return null;
+    }
+
+    private static async ValueTask<Assertion?> _ParseDependencies(
+        JsonElement propertyValue,
+        JsonSchema outerSchema,
+        JsonSchema baseSchema,
+        JsonPointer ptb,
+        Dialect dialect)
+    {
+        await SyncContext.Drop();
+
+        var requiredEntries = new Dictionary<string, string[]>();
+        var schemaEntries = new Dictionary<string, JsonSchema>();
+
+        foreach (var entry in propertyValue.ExpectObject().EnumerateObject())
+        {
+            if (entry.Value.ValueKind == JsonValueKind.Array)
+            {
+                requiredEntries[entry.Name] = entry.Value.EnumerateArray()
+                    .Select(e => e.ExpectString())
+                    .ToArray();
+            }
+            else
+            {
+                schemaEntries[entry.Name] = await ParseSchema(
+                    entry.Value, outerSchema, baseSchema,
+                    ptb.AppendPropertyName(entry.Name), dialect);
+            }
+        }
+
+        var assertions = new List<Assertion>(2);
+
+        if (requiredEntries.Count > 0)
+            assertions.Add(new DependentRequiredAssertion(requiredEntries.ToFrozenDictionary()));
+
+        if (schemaEntries.Count > 0)
+            assertions.Add(new DependentSchemaAssertion(schemaEntries.ToFrozenDictionary()));
+
+        return assertions.Count switch
+        {
+            0 => null,
+            _ => AndCombinedAssertion.From(assertions.ToArray()),
+        };
     }
 
     private static async ValueTask<Assertion?> _ParseSubSchema(

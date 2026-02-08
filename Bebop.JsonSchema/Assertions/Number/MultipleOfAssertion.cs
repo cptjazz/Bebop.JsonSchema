@@ -37,7 +37,17 @@ internal sealed class MultipleOfAssertion(double multipleOf) : NumberAssertion
 
         bool _DecimalFallback(double value, Token element, ErrorCollection errorCollection)
         {
-            // Use decimal arithmetic when double overflows
+            // When quotient overflows to infinity, the value is extremely large.
+            // If the value is an integer (no fractional part) and multipleOf
+            // evenly divides 1.0, then multipleOf divides all integers.
+            if (value == Math.Truncate(value))
+            {
+                var invRemainder = 1.0 % multipleOf;
+                if (Math.Abs(invRemainder) < 1e-15 || Math.Abs(invRemainder - multipleOf) < 1e-15)
+                    return true;
+            }
+
+            // Try decimal arithmetic as a fallback
             try
             {
                 var decValue = (decimal)value;
