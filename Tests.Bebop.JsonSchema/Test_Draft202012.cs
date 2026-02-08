@@ -8,24 +8,28 @@ public class Test_Draft202012
 
     [Theory]
     [ClassData(typeof(Draft202012TestData))]
-    public void RequiredTestCases(TestData data)
+    public async Task RequiredTestCases(TestData data)
     {
         var repo = SchemaRegistry.Custom(SchemaResolver);
-        var jsonSchema = JsonSchema.Create(data.Schema, repo);
+        var jsonSchema = await JsonSchema.Create(data.Schema, repo);
         var errorCollection = new ErrorCollection();
-        var result = jsonSchema.Validate(data.Data, errorCollection);
+
+        await jsonSchema.Prepare();
+        var result = await jsonSchema.Validate(data.Data, errorCollection);
         
         Assert.Equal(data.ExpectedValid, result);
     }
 
     [Theory]
     [ClassData(typeof(Draft202012OptionalTestData))]
-    public void OptionalTestCases(TestData data)
+    public async Task OptionalTestCases(TestData data)
     {
         var repo = SchemaRegistry.Custom(SchemaResolver);
-        var jsonSchema = JsonSchema.Create(data.Schema, repo);
+        var jsonSchema = await JsonSchema.Create(data.Schema, repo);
         var errorCollection = new ErrorCollection();
-        var result = jsonSchema.Validate(data.Data, errorCollection);
+
+        await jsonSchema.Prepare();
+        var result = await jsonSchema.Validate(data.Data, errorCollection);
         
         Assert.Equal(data.ExpectedValid, result);
     }
@@ -64,7 +68,7 @@ public class Test_Draft202012
         var root = doc.RootElement;
 
         var schemaJson = root.GetProperty("schema");
-        var schema = JsonSchema.Create(schemaJson, repo);
+        var schema = await JsonSchema.Create(schemaJson, repo);
         await schema.Prepare();
 
         foreach (var test in root.GetProperty("tests").EnumerateArray())
@@ -73,7 +77,7 @@ public class Test_Draft202012
             var expected = test.GetProperty("valid").GetBoolean();
 
             var errorCollection = new ErrorCollection();
-            var result = schema.Validate(data, errorCollection);
+            var result = await schema.Validate(data, errorCollection);
             Assert.Equal(expected, result);
         }
     }

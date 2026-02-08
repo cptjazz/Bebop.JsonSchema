@@ -5,14 +5,14 @@ internal sealed class OneOfAssertion(JsonSchema[] schemas) : Assertion
 {
     public override string[] AssociatedKeyword => ["oneOf"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var c = 0;
         EvaluationState fes = evaluationState;
         foreach (var schema in schemas)
         {
             var es = evaluationState.New();
-            if (schema.Validate(element, es, NopErrorCollection.Instance))
+            if (await schema.Validate(element, es, NopErrorCollection.Instance).ConfigureAwait(false))
             {
                 c++;
                 if (c == 1)
@@ -36,13 +36,13 @@ internal sealed class OneOfAssertion(JsonSchema[] schemas) : Assertion
         }
     }
 
-    public override async ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
+        await SyncContext.Drop();
+
         foreach (var schema in schemas)
         {
-            await schema
-                .Prepare()
-                .ConfigureAwait(false);
+            await schema.Prepare();
         }
     }
 }

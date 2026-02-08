@@ -3,7 +3,7 @@
 namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
-internal sealed class ExclusiveMinimumPropertyAssertion(double exclusiveMinimum) : NumberPropertyAssertion
+internal sealed class ExclusiveMinimumPropertyAssertion(double exclusiveMinimum) : NumberAssertion
 {
     public override string[] AssociatedKeyword => ["exclusiveMinimum"];
 

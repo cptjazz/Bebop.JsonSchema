@@ -1,11 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Bebop.JsonSchema;
 
 internal readonly struct JsonPointer : IEquatable<JsonPointer>
 {
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly string _pointer;
+    
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly int _hc;
 
     public static readonly JsonPointer Root = new("");

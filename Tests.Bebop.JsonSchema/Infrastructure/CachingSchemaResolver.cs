@@ -12,7 +12,7 @@ public sealed class CachingSchemaResolver : ISchemaResolver
         _httpClient = new HttpClient();
     }
 
-    public JsonElement? Resolve(Uri id)
+    public async ValueTask<JsonElement?> Resolve(Uri id)
     {
         if (id.Host.EndsWith("schemas.json"))
             return null;
@@ -22,7 +22,7 @@ public sealed class CachingSchemaResolver : ISchemaResolver
             return ResolveLocalFile(id);
         }
 
-        return ResolveRemote(id);
+        return await ResolveRemote(id);
     }
 
     private JsonElement? ResolveLocalFile(Uri id)
@@ -38,7 +38,7 @@ public sealed class CachingSchemaResolver : ISchemaResolver
         return doc.RootElement.Clone();
     }
 
-    private JsonElement? ResolveRemote(Uri id)
+    private async Task<JsonElement?> ResolveRemote(Uri id)
     {
         var cacheKey = id.AbsoluteUri;
 
@@ -47,13 +47,12 @@ public sealed class CachingSchemaResolver : ISchemaResolver
             return entry;
         }
 
-        var response = _httpClient.GetAsync(id).GetAwaiter().GetResult();
+        var response = await _httpClient.GetAsync(id);
 
         if (!response.IsSuccessStatusCode)
             return null;
 
-        var content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        using var doc = JsonDocument.Parse(content);
+        using var doc = await JsonDocument.ParseAsync(response.Content.ReadAsStream());
         var schema = doc.RootElement.Clone();
 
         _cache.TryAdd(cacheKey, schema);

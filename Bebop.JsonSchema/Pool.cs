@@ -18,10 +18,17 @@ namespace Bebop.JsonSchema
                 ArrayPool<T>.Shared.Return(array);
             }
 
+#if NET9_0_OR_GREATER
             public ReadOnlySpan<T> AsSpan()
             {
                 return array.AsSpan(0, _position);
             }
+#else
+            public T[] AsSpan()
+            {
+                return array.AsSpan(0, _position).ToArray();
+            }
+#endif
         }
 
         public static PoolRental<T> RentArray<T>(int minimumLength)

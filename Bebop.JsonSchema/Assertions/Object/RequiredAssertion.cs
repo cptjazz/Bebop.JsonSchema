@@ -7,13 +7,13 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
 {
     public override string[] AssociatedKeyword => ["required"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
         {
             // Non-objects shall be ignored
-            return true;
+            return ValueTask.FromResult(true);
         }
 
         bool isValid = true;
@@ -27,7 +27,7 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
             }
         }
 
-        return isValid;
+        return ValueTask.FromResult(isValid);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void _AddError(in Token e, ErrorCollection ec, string p)

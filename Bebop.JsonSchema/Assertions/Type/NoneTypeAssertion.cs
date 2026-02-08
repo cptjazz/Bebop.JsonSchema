@@ -4,9 +4,9 @@ internal sealed class NoneTypeAssertion : TypeAssertion
 {
     public static NoneTypeAssertion Instance { get; } = new();
 
-    public override bool Assert(in Token element, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(in Token element, ErrorCollection errorCollection)
     {
         errorCollection.AddError("Value does not match any allowed type.", element);
-        return false;
+        return ValueTask.FromResult(false);
     }
 }

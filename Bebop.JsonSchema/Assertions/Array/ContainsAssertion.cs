@@ -5,24 +5,24 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
 {
     public override string[] AssociatedKeyword => ["contains", "minContains", "maxContains"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)
             return true;
 
         if (minContains.HasValue && maxContains.HasValue)
-            return _AssertWithMinMax(element, evaluationState, errorCollection, minContains.Value, maxContains.Value);
+            return await _AssertWithMinMax(element, evaluationState, errorCollection, minContains.Value, maxContains.Value).ConfigureAwait(false);
 
         if (minContains.HasValue && !maxContains.HasValue)
-            return _AssertWithMin(element, evaluationState, errorCollection, minContains.Value);
+            return await _AssertWithMin(element, evaluationState, errorCollection, minContains.Value).ConfigureAwait(false);
 
         if (!minContains.HasValue && maxContains.HasValue)
-            return _AssertWithMax(element, evaluationState, errorCollection, maxContains.Value);
+            return await _AssertWithMax(element, evaluationState, errorCollection, maxContains.Value).ConfigureAwait(false);
 
-        return _AssertWithoutMinMax(element, evaluationState, errorCollection);
+        return await _AssertWithoutMinMax(element, evaluationState, errorCollection).ConfigureAwait(false);
     }
 
-    private bool _AssertWithMinMax(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection, int min, int max)
+    private async ValueTask<bool> _AssertWithMinMax(Token element, EvaluationState evaluationState, ErrorCollection errorCollection, int min, int max)
     {
         int c = 0;
         int i = 0;
@@ -33,7 +33,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         {
             var es = evaluationState.New();
             var isContainsValid = false;
-            if (schema.Validate(element.Subitem(in e, i), es, errorCollection))
+            if (await schema.Validate(element.Subitem(in e, i), es, errorCollection).ConfigureAwait(false))
             {
                 c++;
                 if (c > max)
@@ -64,7 +64,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         return isValid;
     }
 
-    private bool _AssertWithMax(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection, int max)
+    private async ValueTask<bool> _AssertWithMax(Token element, EvaluationState evaluationState, ErrorCollection errorCollection, int max)
     {
         int c = 0;
         int i = 0;
@@ -75,7 +75,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         {
             var es = evaluationState.New();
             var isContainsValid = false;
-            if (schema.Validate(element.Subitem(in e, i), es, errorCollection))
+            if (await schema.Validate(element.Subitem(in e, i), es, errorCollection).ConfigureAwait(false))
             {
                 c++;
                 isContainsValid = true;
@@ -104,7 +104,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         return c > 0 && isValid; // contains should find the element at least once
     }
 
-    private bool _AssertWithMin(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection, int min)
+    private async ValueTask<bool> _AssertWithMin(Token element, EvaluationState evaluationState, ErrorCollection errorCollection, int min)
     {
         int c = 0;
         int i = 0;
@@ -115,7 +115,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         {
             var es = evaluationState.New();
             var isContainsValid = false;
-            if (schema.Validate(element.Subitem(in e, i), es, errorCollection))
+            if (await schema.Validate(element.Subitem(in e, i), es, errorCollection).ConfigureAwait(false))
             {
                 c++;
                 if (c >= min) 
@@ -140,7 +140,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         return isValid;
     }
 
-    private bool _AssertWithoutMinMax(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    private async ValueTask<bool> _AssertWithoutMinMax(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         int i = 0;
         var isValid = false;
@@ -150,7 +150,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         {
             var es = evaluationState.New();
             var isContainsValid = false;
-            if (schema.Validate(element.Subitem(in e, i), es, errorCollection))
+            if (await schema.Validate(element.Subitem(in e, i), es, errorCollection).ConfigureAwait(false))
             {
                 isValid = true;
                 absorptionList.Add(es);
@@ -167,5 +167,10 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
         }
 
         return isValid;
+    }
+
+    public override ValueTask PrepareImpl()
+    {
+        return schema.Prepare();
     }
 }

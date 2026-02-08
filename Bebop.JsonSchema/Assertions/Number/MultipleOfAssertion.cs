@@ -3,7 +3,7 @@
 namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
-internal sealed class MultipleOfAssertion(double multipleOf) : NumberPropertyAssertion
+internal sealed class MultipleOfAssertion(double multipleOf) : NumberAssertion
 {
     public override string[] AssociatedKeyword => ["multipleOf"];
 

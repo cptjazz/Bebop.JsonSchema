@@ -7,7 +7,7 @@ internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
 
     public JsonSchema[] Schemas { get; } = schemas;
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)
             return true;
@@ -22,7 +22,7 @@ internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
                 return isValid;
 
             var es = evaluationState.New();
-            if (!Schemas[i].Validate(element.Subitem(in e, i), es, errorCollection))
+            if (!await Schemas[i].Validate(element.Subitem(in e, i), es, errorCollection).ConfigureAwait(false))
             {
                 isValid = false;
             }
@@ -41,5 +41,15 @@ internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
         }
 
         return isValid;
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        foreach (var schema in schemas)
+        {
+            await schema.Prepare();
+        }
     }
 }

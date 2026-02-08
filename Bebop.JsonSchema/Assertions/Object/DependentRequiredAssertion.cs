@@ -7,13 +7,13 @@ internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string
 {
     public override string[] AssociatedKeyword => ["dependentRequired"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
         {
             // Non-objects shall be ignored
-            return true;
+            return ValueTask.FromResult(true);
         }
 
         var isValid = true;
@@ -32,6 +32,6 @@ internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string
             }
         }
 
-        return isValid;
+        return ValueTask.FromResult(isValid);
     }
 }

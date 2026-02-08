@@ -9,19 +9,26 @@ internal sealed class DynamicRefWithPointerAssertion(
 {
     public override string[] AssociatedKeyword => ["$dynamicRef"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
-        var schema = _LoadDynamicSubSchema(evaluationState);
-        return schema.Validate(element, evaluationState, errorCollection);
+        var schema = await _LoadDynamicSubSchema(evaluationState).ConfigureAwait(false);
+        return await schema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false);
     }
 
-    private JsonSchema _LoadDynamicSubSchema(EvaluationState evaluationState)
+    private async ValueTask<JsonSchema> _LoadDynamicSubSchema(EvaluationState evaluationState)
     {
-        if (repo.TryGetSchema(schemaUri, out var schema))
+        var schema = await repo
+            .GetSchema(schemaUri)
+            .ConfigureAwait(false);
+
+        if (schema is not null)
         {
+            await SyncContext.Drop();
+
             // A $dynamicRef to an $anchor in the same schema resource behaves like a normal $ref to an $anchor
             if (schema.Anchors.TryGetSchemaByNamedAnchor(schemaPath, out var inn))
             {
+                await inn.Prepare();
                 return inn;
             }
 
@@ -29,18 +36,21 @@ internal sealed class DynamicRefWithPointerAssertion(
             {
                 if (s.Anchors.TryGetSchemaDynamicNamedAnchor(schemaPath, out var inner))
                 {
+                    await inner.Prepare();
                     return inner;
                 }
             }
 
             if (schema.Anchors.TryGetSchemaDynamicNamedAnchor(schemaPath, out var innerSchema))
             {
+                await innerSchema.Prepare();
                 return innerSchema;
             }
 
 
             if (schema.Anchors.TryGetSchemaByAnonymousAnchor(schemaPath, out var innerSchema2))
             {
+                await innerSchema2.Prepare();
                 return innerSchema2;
             }
 

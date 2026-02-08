@@ -4,7 +4,7 @@ namespace Bebop.JsonSchema;
 
 internal static class SchemaParser
 {
-    public static JsonSchema ParseSchema(JsonElement element, SchemaRegistry repo, Uri? retrievalUri)
+    public static async ValueTask<JsonSchema> ParseSchema(JsonElement element, SchemaRegistry repo, Uri? retrievalUri)
     {
         var anchors = new Anchors();
 
@@ -25,20 +25,21 @@ internal static class SchemaParser
             ? new Uri(schemaElement.ExpectString(), UriKind.Absolute)
             : Dialect.DefaultDialectUri;
 
+        await SyncContext.Drop();
+        
         var dialect = Dialect.Get(schemaUri) ??
-            (repo.TryGetSchema(schemaUri, out var ds)
-                ? Dialect.FromSchema(ds)
-                : throw new InvalidSchemaException("Unable to find custom meta-schema"));
+                      Dialect.FromSchema(await repo.GetSchema(schemaUri) ?? 
+                                         throw new InvalidSchemaException("Unable to find custom meta-schema"));
 
         var js = new JsonSchema(id, repo, anchors, isAnon, dialect);
-        js.RootAssertion = _ParseAssertions(element, anchors, js, js, JsonPointer.Root, dialect);
+        js.RootAssertion = await _ParseAssertions(element, anchors, js, js, JsonPointer.Root, dialect);
         _AddMetaInfo(js, element);
         js.Path = JsonPointer.Root;
 
         return js;
     }
 
-    internal static JsonSchema ParseSchema(
+    internal static async ValueTask<JsonSchema> ParseSchema(
         JsonElement element, 
         JsonSchema outerSchema, 
         JsonSchema baseSchema, 
@@ -63,15 +64,15 @@ internal static class SchemaParser
         }
 
         var dialect = baseDialect;
+        await SyncContext.Drop();
 
         if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("$schema", out var schemaElement))
         {
             var schemaUri = new Uri(schemaElement.ExpectString(), UriKind.Absolute);
 
             dialect = Dialect.Get(schemaUri) ??
-                (repo.TryGetSchema(schemaUri, out var ds)
-                    ? Dialect.FromSchema(ds)
-                    : throw new InvalidSchemaException("Unable to find custom meta-schema"));
+                          Dialect.FromSchema(await repo.GetSchema(schemaUri) ??
+                                             throw new InvalidSchemaException("Unable to find custom meta-schema"));
         }
         
         if (isNamed)
@@ -89,7 +90,7 @@ internal static class SchemaParser
             baseSchema = js;
         }
 
-        js.RootAssertion = _ParseAssertions(element, anchors, js, baseSchema, pathToBase, dialect);
+        js.RootAssertion = await _ParseAssertions(element, anchors, js, baseSchema, pathToBase, dialect);
         _AddMetaInfo(js, element);
         
         js.Path = pathToBase;
@@ -99,7 +100,7 @@ internal static class SchemaParser
         return js;
     }
 
-    private static Assertion _ParseAssertions(
+    private static ValueTask<Assertion> _ParseAssertions(
         JsonElement element,
         Anchors anchors,
         JsonSchema outerSchema, 
@@ -109,15 +110,15 @@ internal static class SchemaParser
     {
         return element.ValueKind switch
         {
-            JsonValueKind.False => NoneTypeAssertion.Instance,
-            JsonValueKind.True => AnyTypeAssertion.Instance,
+            JsonValueKind.False => ValueTask.FromResult<Assertion>(NoneTypeAssertion.Instance),
+            JsonValueKind.True => ValueTask.FromResult<Assertion>(AnyTypeAssertion.Instance),
             JsonValueKind.Object => _ParseAssertionsCore(element, anchors, outerSchema, baseSchema, pathToBase, dialect),
 
-            _ => throw new InvalidSchemaException("Schema must be an object, true, or false.", element)
+            _ => ValueTask.FromException<Assertion>(new InvalidSchemaException("Schema must be an object, true, or false.", element))
         };
     }
 
-    private static Assertion _ParseAssertionsCore(
+    private static async ValueTask<Assertion> _ParseAssertionsCore(
         JsonElement element, 
         Anchors anchors,
         JsonSchema outerSchema,
@@ -126,6 +127,7 @@ internal static class SchemaParser
         Dialect dialect)
     {
         var assertions = new List<Assertion>();
+        await SyncContext.Drop();
 
         foreach (var property in element.EnumerateObject())
         {
@@ -153,15 +155,16 @@ internal static class SchemaParser
                     },
                     "const" => new ConstAssertion(propertyValue),
 
-                    "not" => new NotAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
-                    "allOf" => new AllOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
-                    "anyOf" => new AnyOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
-                    "oneOf" => new OneOfAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
+                    "not" => new NotAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "allOf" => new AllOfAssertion(await propertyValue.ExpectArray().SelectArray((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect))),
+                    "anyOf" => new AnyOfAssertion(await propertyValue.ExpectArray().SelectArray((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect))),
+                    "oneOf" => new OneOfAssertion(await propertyValue.ExpectArray().SelectArray((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect))),
                     "enum" => new EnumAssertion(propertyValue.ExpectArray().ToArray()),
                     "$ref" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, false),
-                    "$dynamicRef" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, true),
+                    "$dynamicRef" or "$recursiveRef" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, true),
                     "$anchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, false),
                     "$dynamicAnchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, true),
+                    "$recursiveAnchor" => _ParseAnchor("#", anchors, outerSchema, true),
 
                     // String specific
                     "minLength" => new MinLengthAssertion(property.ExpectNonNegativeCount()),
@@ -174,11 +177,12 @@ internal static class SchemaParser
                     "uniqueItems" => property.ExpectBoolean()
                         ? UniqueItemsAssertion.Instance
                         : null,
-                    "contains" => new ContainsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect), _GetMinContains(element), _GetMaxContains(element)),
+                    "contains" => new ContainsAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect), _GetMinContains(element), _GetMaxContains(element)),
                     "maxContains" or "minContains" => null, // Fetched by 'contains' already.
-                    "items" => new ItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
-                    "prefixItems" => new PrefixItemsAssertion(propertyValue.ExpectArray().Select((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect)).ToArray()),
-                    "unevaluatedItems" => new UnevaluatedItemsAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "items" => await _ItemsAssertion(outerSchema, baseSchema, dialect, propertyValue, ptb), // items-array (2019-09) == prefixItems (2020-12)
+                    "additionalItems" => new AdditionalItemsAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)), // additionalItems (2019-09) == items (2020-12)
+                    "prefixItems" => new PrefixItemsAssertion(await propertyValue.ExpectArray().SelectArray((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect))),
+                    "unevaluatedItems" => new UnevaluatedItemsAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
 
                     // Number specific
                     "minimum" => new MinimumPropertyAssertion(property.ExpectNumber()),
@@ -197,12 +201,12 @@ internal static class SchemaParser
                             .ToArray()
                     ),
                     "properties" => new PropertiesAssertion(
-                        propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
+                        await propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
                             x => x.Name,
                             x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name), dialect))),
-                    "propertyNames" => new PropertyNamesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "propertyNames" => new PropertyNamesAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
                     "patternProperties" => new PatternPropertiesAssertion(
-                        propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
+                        await propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
                             x => x.Name,
                             x => ParseSchema(x.Value, outerSchema, baseSchema, ptb, dialect))),
                     "dependentRequired" => new DependentRequiredAssertion(
@@ -210,26 +214,26 @@ internal static class SchemaParser
                         x => x.Name,
                         x => x.Value.ExpectArray().Select(
                             a => a.ExpectString()).ToArray())),
-                    "additionalProperties" => new AdditionalPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
-                    "unevaluatedProperties" => new UnevaluatedPropertiesAssertion(ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "additionalProperties" => new AdditionalPropertiesAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
+                    "unevaluatedProperties" => new UnevaluatedPropertiesAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect)),
                     "default" => null,
 
                     // Conditional
                     "if" => new ConditionalAssertion(
-                        ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
-                        _GetThen(element, outerSchema, baseSchema, pathToBase, dialect),
-                        _GetElse(element, outerSchema, baseSchema, pathToBase, dialect)),
+                        await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
+                        await _GetThen(element, outerSchema, baseSchema, pathToBase, dialect),
+                        await _GetElse(element, outerSchema, baseSchema, pathToBase, dialect)),
 
                     "then" or "else" => element.TryGetProperty("if", out _)
                         ? null
-                        : _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
+                        : await _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
 
                     // Content
                     "contentSchema" or "contentEncoding" or "contentMediaType" => null,
 
                     // DependentSchema
                     "dependentSchemas" => new DependentSchemaAssertion(
-                        propertyValue.ExpectObject().EnumerateObject().ToDictionary(
+                        await propertyValue.ExpectObject().EnumerateObject().ToFrozenDictionary(
                             x => x.Name,
                             x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name), dialect))),
 
@@ -241,9 +245,9 @@ internal static class SchemaParser
                     // Vocabulary
                     "$vocabulary" => _ParseVocabulary(propertyValue.ExpectObject(), baseSchema),
 
-                    _ => _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
+                    _ => await _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
                 }
-            : _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect, true);
+            : await _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect, true);
 
             if (assertion is not null)
             {
@@ -253,6 +257,21 @@ internal static class SchemaParser
 
         var items = assertions.OfType<ItemsAssertion>().FirstOrDefault();
         var prefixItems = assertions.OfType<PrefixItemsAssertion>().FirstOrDefault();
+        var additionalItems = assertions.OfType<AdditionalItemsAssertion>().FirstOrDefault();
+
+        if (items is not null && additionalItems is not null)
+        {
+            // 2019-09: when items is schema, additionalItems does nothing
+            assertions.Remove(additionalItems);
+            additionalItems = null;
+        }
+
+        if (additionalItems is not null)
+        {
+            items = new ItemsAssertion(additionalItems.Schema);
+            assertions.Remove(additionalItems);
+            assertions.Add(items);
+        }
 
         if (items is not null && prefixItems is not null)
         {
@@ -268,6 +287,19 @@ internal static class SchemaParser
             .ToArray();
 
         return AndCombinedAssertion.From(finalAssertions);
+    }
+
+    private static async ValueTask<Assertion> _ItemsAssertion(JsonSchema outerSchema, JsonSchema baseSchema, Dialect dialect, JsonElement propertyValue, JsonPointer ptb)
+    {
+        await SyncContext.Drop();
+
+        return dialect.IsDraft201909
+            ? propertyValue switch
+            {
+                { ValueKind: JsonValueKind.Array } => new PrefixItemsAssertion(await propertyValue.ExpectArray().SelectArray((e, i) => ParseSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect))),
+                _ => new ItemsAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect))
+            }
+            : new ItemsAssertion(await ParseSchema(propertyValue, outerSchema, baseSchema, ptb, dialect));
     }
 
     private static Assertion? _ParseVocabulary(JsonElement propertyValue, JsonSchema baseSchema)
@@ -306,7 +338,7 @@ internal static class SchemaParser
         }
     }
 
-    private static JsonSchema _GetThen(
+    private static ValueTask<JsonSchema> _GetThen(
         JsonElement element, 
         JsonSchema outerSchema, 
         JsonSchema baseSchema, 
@@ -316,10 +348,10 @@ internal static class SchemaParser
         if (element.TryGetProperty("then", out var value))
             return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("then"), dialect);
 
-        return JsonSchema.True;
+        return ValueTask.FromResult(JsonSchema.True);
     }
 
-    private static JsonSchema _GetElse(
+    private static ValueTask<JsonSchema> _GetElse(
         JsonElement element, 
         JsonSchema outerSchema, 
         JsonSchema baseSchema, 
@@ -329,7 +361,7 @@ internal static class SchemaParser
         if (element.TryGetProperty("else", out var value))
             return ParseSchema(value, outerSchema, baseSchema, pathToBase.AppendPropertyName("else"), dialect);
         
-        return JsonSchema.True;
+        return ValueTask.FromResult(JsonSchema.True);
     }
 
     private static int? _GetMinContains(JsonElement element)
@@ -360,7 +392,7 @@ internal static class SchemaParser
         return null;
     }
 
-    private static Assertion? _ParseSubSchema(
+    private static async ValueTask<Assertion?> _ParseSubSchema(
         JsonElement element, 
         JsonSchema outerSchema, 
         JsonSchema baseSchema, 
@@ -378,7 +410,10 @@ internal static class SchemaParser
             }
         }
 
-        ParseSchema(element, outerSchema, baseSchema, pathToBase, dialect);
+        await SyncContext.Drop();
+        var s = await ParseSchema(element, outerSchema, baseSchema, pathToBase, dialect);
+        baseSchema.Anchors.AddAnonymousAnchor(pathToBase, s);
+
         return null;
     }
 
@@ -466,3 +501,38 @@ internal static class SchemaParser
         };
     }
 }
+
+internal static class AsyncExtensions
+{
+    public static async ValueTask<T[]> SelectArray<T>(this JsonElement.ArrayEnumerator source, Func<JsonElement, int, ValueTask<T>> selector)
+    {
+        var list = new List<T>();
+        var index = 0;
+
+        foreach (var item in source)
+        {
+            var selected = await selector(item, index).ConfigureAwait(false);
+            list.Add(selected);
+            index++;
+        }
+        
+        return list.ToArray();
+    }
+
+    public static async ValueTask<FrozenDictionary<TKey, TValue>> ToFrozenDictionary<TSource, TKey, TValue>(
+        this IEnumerable<TSource> source,
+        Func<TSource, TKey> keySelector,
+        Func<TSource, ValueTask<TValue>> valueSelector)
+        where TKey : notnull
+    {
+        var dict = new Dictionary<TKey, TValue>();
+        foreach (var item in source)
+        {
+            var key = keySelector(item);
+            var value = await valueSelector(item).ConfigureAwait(false);
+            dict[key] = value;
+        }
+        return dict.ToFrozenDictionary();
+    }
+}
+

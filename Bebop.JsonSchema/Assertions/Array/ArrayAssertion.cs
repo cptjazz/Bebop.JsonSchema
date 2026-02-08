@@ -1,14 +1,14 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Array;
 
-internal abstract class ArrayAssertion : Assertion
+internal abstract class ArrayAssertion : PreparedAssertion
 {
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind == JsonValueKind.Array) 
-            return Assert(element, errorCollection);
+            return ValueTask.FromResult(Assert(element, errorCollection));
 
         // Non-arrays shall be ignored
-        return true;
+        return ValueTask.FromResult(true);
     }
 
     public abstract bool Assert(in Token array, ErrorCollection errorCollection);

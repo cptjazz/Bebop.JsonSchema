@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Bebop.JsonSchema;
+﻿namespace Bebop.JsonSchema;
 
 internal sealed class ResolvingSchemaRegistry(HttpClient httpClient) : SchemaRegistry
 {
@@ -11,32 +9,37 @@ internal sealed class ResolvingSchemaRegistry(HttpClient httpClient) : SchemaReg
         _baseRegistry.AddSchema(schema);
     }
 
-    public override bool TryGetSchema(Uri id, [NotNullWhen(true)] out JsonSchema? schema)
+    public override async ValueTask<JsonSchema?> GetSchema(Uri id)
     {
-        if (_baseRegistry.TryGetSchema(id, out schema))
-            return true;
+        var schema = await _baseRegistry.GetSchema(id);
+        if (schema is not null)
+            return schema;
 
         // Only resolve absolute http/https URIs -- discard urn or other schemes.
         if (!id.IsAbsoluteUri || (id.Scheme != Uri.UriSchemeHttp && id.Scheme != Uri.UriSchemeHttps))
         {
-            schema = null;
-            return false;
+            return null;
         }
 
         try
         {
             // TODO: Synchronous fetch (blocking). Consider async redesign if this becomes hot.
-            using var stream = httpClient.GetStreamAsync(id).GetAwaiter().GetResult();
-            using var doc = JsonDocument.Parse(stream);
+            using var stream = await httpClient
+                .GetStreamAsync(id)
+                .ConfigureAwait(false);
+
+            using var doc = await JsonDocument
+                .ParseAsync(stream)
+                .ConfigureAwait(false);
 
             // Create will call AddSchema (via repository) so it gets cached.
-            schema = JsonSchema.Create(doc, this);
-            return true;
+            return await JsonSchema
+                .Create(doc, this)
+                .ConfigureAwait(false);
         }
         catch (Exception)
         {
-            schema = null;
-            return false;
+            return null;
         }
     }
 

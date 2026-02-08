@@ -4,14 +4,24 @@ internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
 {
     public override string[] AssociatedKeyword => [];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         for (var i = 0; i < assertions.Length; i++)
         {
-            if (assertions[i].Assert(element, evaluationState, errorCollection))
+            if (await assertions[i].Assert(element, evaluationState, errorCollection).ConfigureAwait(false))
                 return true;
         }
 
         return false;
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        foreach (var assertion in assertions)
+        {
+            await assertion.Prepare();
+        }
     }
 }

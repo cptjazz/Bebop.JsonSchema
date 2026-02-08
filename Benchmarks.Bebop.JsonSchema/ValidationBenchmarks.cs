@@ -6,7 +6,7 @@ using BenchmarkDotNet.Jobs;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-//[SimpleJob(RuntimeMoniker.Net80)]
+[SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net10_0)]
 public class ValidationBenchmarks
 {
@@ -15,7 +15,7 @@ public class ValidationBenchmarks
     private Json.Schema.JsonSchema _personSchemaJE;
 
     [GlobalSetup]
-    public void Setup()
+    public async Task Setup()
     {
         var personSchemaText = """
                                {
@@ -233,7 +233,9 @@ public class ValidationBenchmarks
                                }
 
                                """;
-        _personSchema = JsonSchema.Create(personSchemaText);
+        _personSchema = await JsonSchema.Create(personSchemaText);
+        await _personSchema.Prepare();
+
         _personSchemaJE = Json.Schema.JsonSchema.FromText(personSchemaText);
 
         var personTestDataText1 = """
@@ -300,10 +302,10 @@ public class ValidationBenchmarks
     }
 
     [Benchmark]
-    public bool Validate_Person()
+    public async Task<bool> Validate_Person()
     {
         var errorCollection = new ErrorCollection();
-        return _personSchema.Validate(_personTestData1.RootElement, errorCollection);
+        return await _personSchema.Validate(_personTestData1.RootElement, errorCollection);
     }
 
     [Benchmark]

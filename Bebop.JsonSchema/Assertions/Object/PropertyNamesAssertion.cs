@@ -5,7 +5,7 @@ internal sealed class PropertyNamesAssertion(JsonSchema schema) : Assertion
 {
     public override string[] AssociatedKeyword => ["propertyNames"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
@@ -20,7 +20,7 @@ internal sealed class PropertyNamesAssertion(JsonSchema schema) : Assertion
         {
             var p = JsonSerializer.SerializeToElement(property.Name);
                 
-            if (!schema.Validate(element.Subitem(in p, property.Name), evaluationState, errorCollection))
+            if (!await schema.Validate(element.Subitem(in p, property.Name), evaluationState, errorCollection).ConfigureAwait(false))
             {
                 _AddError(element, errorCollection, property);
                 isValid = false;
@@ -33,5 +33,10 @@ internal sealed class PropertyNamesAssertion(JsonSchema schema) : Assertion
         {
             ec.AddError($"Property name '{p.Name}' does not match the schema.", e);
         }
+    }
+
+    public override ValueTask PrepareImpl()
+    {
+        return schema.Prepare();
     }
 }

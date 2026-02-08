@@ -7,10 +7,10 @@ internal sealed class NotAssertion(JsonSchema schema) : Assertion
 {
     public override string[] AssociatedKeyword => ["not"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var es = evaluationState.New();
-        var result = schema.Validate(element, es, NopErrorCollection.Instance);
+        var result = await schema.Validate(element, es, NopErrorCollection.Instance).ConfigureAwait(false);
 
         if (!result)
         {
@@ -26,5 +26,10 @@ internal sealed class NotAssertion(JsonSchema schema) : Assertion
             ec.AddError("Element matches schema in 'not' assertion.", e);
             return false;
         }
+    }
+
+    public override ValueTask PrepareImpl()
+    {
+        return schema.Prepare();
     }
 }

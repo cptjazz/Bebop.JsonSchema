@@ -1,6 +1,4 @@
-﻿using Bebop.JsonSchema.Assertions.Type;
-
-namespace Bebop.JsonSchema.Assertions;
+﻿namespace Bebop.JsonSchema.Assertions;
 
 internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
 {
@@ -17,13 +15,13 @@ internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
         return new AndCombinedAssertion(assertions);
     }
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var isValid = true;
 
         foreach (var assertion in assertions)
         {
-            if (!assertion.Assert(element, evaluationState, errorCollection))
+            if (!await assertion.Assert(element, evaluationState, errorCollection).ConfigureAwait(false))
             {
                 isValid = false;
             }
@@ -32,13 +30,13 @@ internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
         return isValid;
     }
 
-    public override async ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
+        await SyncContext.Drop();
+
         foreach (var assertion in assertions)
         {
-            await assertion
-                .Prepare()
-                .ConfigureAwait(false);
+            await assertion.Prepare();
         }
     }
 }

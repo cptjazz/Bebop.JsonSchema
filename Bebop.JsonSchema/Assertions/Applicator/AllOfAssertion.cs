@@ -5,7 +5,7 @@ internal sealed class AllOfAssertion(JsonSchema[] schemas) : Assertion
 {
     public override string[] AssociatedKeyword => ["allOf"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var isValid = true;
         using var absorptionList = Pool.RentArray<EvaluationState>(schemas.Length);
@@ -13,7 +13,7 @@ internal sealed class AllOfAssertion(JsonSchema[] schemas) : Assertion
         foreach (var schema in schemas)
         {
             var es = evaluationState.New();
-            if (!schema.Validate(element, es, errorCollection))
+            if (!await schema.Validate(element, es, errorCollection).ConfigureAwait(false))
             {
                 errorCollection.AddError("Element does not match all schemas in 'allOf' assertion.", element);
                 isValid = false;
@@ -32,13 +32,13 @@ internal sealed class AllOfAssertion(JsonSchema[] schemas) : Assertion
         return isValid;
     }
 
-    public override async ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
-        foreach (var s in schemas)
+        await SyncContext.Drop();
+        
+        foreach (var schema in schemas)
         {
-            await s
-                .Prepare()
-                .ConfigureAwait(false);
+            await schema.Prepare();
         }
     }
 }

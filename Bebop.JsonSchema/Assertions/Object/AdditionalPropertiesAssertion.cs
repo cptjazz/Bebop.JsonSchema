@@ -9,7 +9,7 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
 
     public override string[] AssociatedKeyword => ["additionalProperties"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
@@ -28,7 +28,7 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
 
             var propertyValue = property.Value;
             var h = new Token(in propertyValue, propertyPath);
-            if (!schema.Validate(h, evaluationState, errorCollection))
+            if (!await schema.Validate(h, evaluationState, errorCollection).ConfigureAwait(false))
             {
                 _AddError(errorCollection, property, h);
 
@@ -46,5 +46,10 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
             ec.AddError($"Additional property '{p.Name}' does not match the schema defined by 'additionalProperties'.",
                         h);
         }
+    }
+
+    public override ValueTask PrepareImpl()
+    {
+        return schema.Prepare();
     }
 }

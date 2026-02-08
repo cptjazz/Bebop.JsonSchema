@@ -2,5 +2,5 @@
 
 public interface ISchemaResolver
 {
-    JsonElement? Resolve(Uri id);
+    ValueTask<JsonElement?> Resolve(Uri id);
 }

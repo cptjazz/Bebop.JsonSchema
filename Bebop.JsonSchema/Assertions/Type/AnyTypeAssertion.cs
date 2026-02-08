@@ -4,8 +4,8 @@ internal sealed class AnyTypeAssertion : TypeAssertion
 {
     public static AnyTypeAssertion Instance { get; } = new();
 
-    public override bool Assert(in Token element, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(in Token element, ErrorCollection errorCollection)
     {
-        return true;
+        return ValueTask.FromResult(true);
     }
 }

@@ -7,7 +7,7 @@ internal sealed class UnevaluatedItemsAssertion(JsonSchema schema) : Assertion
 
     public override int Order => 1000;
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)
             return true;
@@ -22,7 +22,7 @@ internal sealed class UnevaluatedItemsAssertion(JsonSchema schema) : Assertion
             if (evaluationState.IsPropertyUnevaluated(propertyPath))
             {
                 var h = new Token(in e, propertyPath);
-                if (!schema.Validate(h, evaluationState, errorCollection))
+                if (!await schema.Validate(h, evaluationState, errorCollection).ConfigureAwait(false))
                 {
                     errorCollection.AddError("Array element does not match schema in 'unevaluatedItems' assertion.", h);
                     isValid = false;
@@ -35,5 +35,10 @@ internal sealed class UnevaluatedItemsAssertion(JsonSchema schema) : Assertion
         }
 
         return isValid;
+    }
+
+    public override ValueTask PrepareImpl()
+    {
+        return schema.Prepare();
     }
 }

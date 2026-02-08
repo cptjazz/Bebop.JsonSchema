@@ -5,7 +5,7 @@ internal sealed class CombinedItemsPrefixItemsAssertion(JsonSchema[] prefixItems
 {
     public override string[] AssociatedKeyword => ["items", "prefixItems"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)
             return true;
@@ -23,7 +23,7 @@ internal sealed class CombinedItemsPrefixItemsAssertion(JsonSchema[] prefixItems
             if (i >= prefixItemsSchemas.Length)
             {
                 var es = evaluationState.New();
-                if (!itemsSchema.Validate(h, es, errorCollection))
+                if (!await itemsSchema.Validate(h, es, errorCollection).ConfigureAwait(false))
                 {
                     isValid = false;
                 }
@@ -37,7 +37,7 @@ internal sealed class CombinedItemsPrefixItemsAssertion(JsonSchema[] prefixItems
                 continue;
             }
 
-            if (!prefixItemsSchemas[i].Validate(h, evaluationState, errorCollection))
+            if (!await prefixItemsSchemas[i].Validate(h, evaluationState, errorCollection).ConfigureAwait(false))
                 isValid = false;
 
             evaluationState.AddProperty(element.ElementPath.AppendIndex(i), isValid);
@@ -50,5 +50,16 @@ internal sealed class CombinedItemsPrefixItemsAssertion(JsonSchema[] prefixItems
         }
 
         return isValid;
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        await itemsSchema.Prepare();
+        foreach (var schema in prefixItemsSchemas)
+        {
+            await schema.Prepare();
+        }
     }
 }

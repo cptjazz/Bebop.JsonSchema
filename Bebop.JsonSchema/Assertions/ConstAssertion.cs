@@ -1,7 +1,7 @@
 ﻿namespace Bebop.JsonSchema.Assertions;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
-internal sealed class ConstAssertion(JsonElement constant) : Assertion
+internal sealed class ConstAssertion(JsonElement constant) : PreparedAssertion
 {
     private readonly IJsonValueComparer _comparer = _GetComparer(constant);
 
@@ -21,15 +21,15 @@ internal sealed class ConstAssertion(JsonElement constant) : Assertion
         };
     }
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind == constant.ValueKind)
         {
             if (_comparer.AreEqual(element.Element))
-                return true;
+                return ValueTask.FromResult(true);
         }
 
-        return _AddError(element, errorCollection);
+        return ValueTask.FromResult(_AddError(element, errorCollection));
 
         static bool _AddError(in Token e, ErrorCollection ec)
         {

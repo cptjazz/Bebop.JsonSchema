@@ -11,12 +11,24 @@ public sealed class JsonSchema
 
     private static JsonSchema _TrueSchema()
     {
-        return SchemaParser.ParseSchema(JsonSerializer.SerializeToElement(true), SchemaRegistry.Local(), null);
+        var repo = SchemaRegistry.Local();
+        var js = new JsonSchema(repo.MakeRandomUri(), repo, new(), false, Dialect.Get(Dialect.DefaultDialectUri)!);
+
+        js.RootAssertion = AnyTypeAssertion.Instance;
+        js.IsPrepared = true;
+
+        return js;
     }
 
     private static JsonSchema _FalseSchema()
     {
-        return SchemaParser.ParseSchema(JsonSerializer.SerializeToElement(false), SchemaRegistry.Local(), null);
+        var repo = SchemaRegistry.Local();
+        var js = new JsonSchema(repo.MakeRandomUri(), repo, new(), false, Dialect.Get(Dialect.DefaultDialectUri)!);
+
+        js.RootAssertion = NoneTypeAssertion.Instance;
+        js.IsPrepared = true;
+
+        return js;
     }
 
 
@@ -38,6 +50,7 @@ public sealed class JsonSchema
 
     internal Anchors Anchors { get; }
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal bool IsAnonymous { get; }
 
     public string? Comment { get; internal set; }
@@ -46,29 +59,43 @@ public sealed class JsonSchema
 
     internal JsonPointer Path { get; set; }
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal IReadOnlySet<Uri>? Vocabulary { get; set; }
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal Dialect Dialect { get; }
 
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal string DebuggerDisplay => $"{Path}";
 
-    public static JsonSchema Create(string json) => Create(JsonDocument.Parse(json), SchemaRegistry.Local());
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    internal bool IsPrepared { get; private set; }
 
-    public static JsonSchema Create(JsonDocument document) => Create(document, SchemaRegistry.Local());
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly SemaphoreSlim _preparationSemaphore = new(1, 1);
+    
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private bool _isPreparing;
 
-    public static JsonSchema Create(JsonDocument document, SchemaRegistry repository)
+    public static ValueTask<JsonSchema> Create(string json) => Create(JsonDocument.Parse(json), SchemaRegistry.Local());
+
+    public static ValueTask<JsonSchema> Create(JsonDocument document) => Create(document, SchemaRegistry.Local());
+
+    public static ValueTask<JsonSchema> Create(JsonDocument document, SchemaRegistry repository)
     {
         return Create(document.RootElement.Clone(), repository, null, true);
     }
 
-    public static JsonSchema Create(JsonElement document, SchemaRegistry repository)
+    public static ValueTask<JsonSchema> Create(JsonElement document, SchemaRegistry repository)
     {
         return Create(document, repository, null, true);
     }
 
-    internal static JsonSchema Create(JsonElement element, SchemaRegistry repository, Uri? retrievalUri, bool addToRepo)
+    internal static async ValueTask<JsonSchema> Create(JsonElement element, SchemaRegistry repository, Uri? retrievalUri, bool addToRepo)
     {
-        var me = SchemaParser.ParseSchema(element, repository, retrievalUri);
+        var me = await SchemaParser
+            .ParseSchema(element, repository, retrievalUri)
+            .ConfigureAwait(false);
         
         if (addToRepo)
         {
@@ -78,28 +105,58 @@ public sealed class JsonSchema
         return me;
     }
 
-    public bool Validate(JsonDocument document, ErrorCollection errorCollection)
+    public ValueTask<bool> Validate(JsonDocument document, ErrorCollection errorCollection)
     {
         return Validate(document.RootElement, errorCollection);
     }
 
-    public bool Validate(in JsonElement element, ErrorCollection errorCollection)
+    public ValueTask<bool> Validate(in JsonElement element, ErrorCollection errorCollection)
     {
         var allocSize = Math.Min(50, Repository.EstimateSize() ?? 20);
         return Validate(new (in element, JsonPointer.Root), new(new(allocSize)), errorCollection);
     }
 
-    internal bool Validate(Token token, EvaluationState evaluationState, ErrorCollection errorCollection)
+    internal async ValueTask<bool> Validate(Token token, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
+        _EnsurePrepared();
+
         evaluationState.PushSchema(this);
-        var result = RootAssertion.Assert(token, evaluationState, errorCollection);
+        var result = await RootAssertion.Assert(token, evaluationState, errorCollection).ConfigureAwait(false);
         evaluationState.PopSchema();
 
         return result;
     }
 
-    public ValueTask Prepare()
+    private void _EnsurePrepared()
     {
-        return RootAssertion.Prepare();
+        if (!IsPrepared)
+        {
+            throw new InvalidOperationException("Schema must be prepared before validation. Call Prepare() first.");
+        }
+    }
+
+    public async ValueTask Prepare()
+    {
+        if (Volatile.Read(ref _isPreparing))
+            return;
+
+        await SyncContext.Drop();
+        await _preparationSemaphore.WaitAsync();
+        
+        try
+        {
+            if (IsPrepared)
+                return;
+
+            Volatile.Write(ref _isPreparing, true);
+            await RootAssertion.Prepare();
+            Volatile.Write(ref _isPreparing, false);
+
+            IsPrepared = true;
+        }
+        finally
+        {
+            _preparationSemaphore.Release();
+        }        
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace Bebop.JsonSchema.Assertions.Array;
+namespace Bebop.JsonSchema.Assertions.Array;
 
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
-internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
+internal sealed class AdditionalItemsAssertion(JsonSchema schema) : Assertion
 {
     public JsonSchema Schema { get; } = schema;
 
@@ -30,7 +29,7 @@ internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
             {
                 absorptionList.Add(es);
             }
-             
+
             evaluationState.AddProperty(element.ElementPath.AppendIndex(i), isValid);
             i++;
         }
@@ -48,3 +47,4 @@ internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
         return schema.Prepare();
     }
 }
+

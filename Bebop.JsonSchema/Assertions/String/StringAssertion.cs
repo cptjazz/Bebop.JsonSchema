@@ -1,16 +1,15 @@
 ﻿namespace Bebop.JsonSchema.Assertions.String;
 
-internal abstract class StringAssertion : Assertion
+internal abstract class StringAssertion : PreparedAssertion
 {
-    public sealed override bool Assert(in Token element, in EvaluationState evaluationState,
+    public sealed override ValueTask<bool> Assert(Token element, EvaluationState evaluationState,
         ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind == JsonValueKind.String)
-            return AssertProperty(element.Element.GetString()!, element, errorCollection);
+            return ValueTask.FromResult(AssertProperty(element.Element.GetString()!, element, errorCollection));
 
         // Non-strings shall be ignored
-        return true;
-
+        return ValueTask.FromResult(true);
     }
 
     public abstract bool AssertProperty(string text, in Token element, ErrorCollection errorCollection);

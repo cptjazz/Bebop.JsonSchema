@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace Bebop.JsonSchema;
 
@@ -18,7 +17,7 @@ public abstract class SchemaRegistry
 
     public abstract void AddSchema(JsonSchema schema);
 
-    public abstract bool TryGetSchema(Uri id, [NotNullWhen(true)] out JsonSchema? schema);
+    public abstract ValueTask<JsonSchema?> GetSchema(Uri id);
 
     internal Uri MakeRandomUri()
     {

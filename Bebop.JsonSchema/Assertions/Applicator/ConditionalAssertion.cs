@@ -6,10 +6,19 @@ internal sealed class ConditionalAssertion(JsonSchema ifSchema, JsonSchema thenS
 {
     public override string[] AssociatedKeyword => ["if", "then", "else"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
-        return ifSchema.Validate(element, evaluationState, errorCollection) 
-            ? thenSchema.Validate(element, evaluationState, errorCollection) 
-            : elseSchema.Validate(element, evaluationState, errorCollection);
+        return await ifSchema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false)
+            ? await thenSchema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false)
+            : await elseSchema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false);
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        await ifSchema.Prepare();
+        await thenSchema.Prepare();
+        await elseSchema.Prepare();
     }
 }

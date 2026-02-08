@@ -11,16 +11,19 @@ internal sealed class RefWithPointerAssertion(
 
     public override string[] AssociatedKeyword => ["$ref"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
-        _schema ??= _LoadStaticSubSchema();
-
-        return _schema.Validate(element, evaluationState, errorCollection);
+        EnsurePrepared();
+        return await _schema!.Validate(element, evaluationState, errorCollection).ConfigureAwait(false);
     }
 
-    private JsonSchema _LoadStaticSubSchema()
+    private async ValueTask<JsonSchema> _LoadSubSchema()
     {
-        if (repo.TryGetSchema(schemaUri, out var schema))
+        var schema = await repo
+            .GetSchema(schemaUri)
+            .ConfigureAwait(false);
+
+        if (schema is not null)
         {
             if (schema.Anchors.TryGetSchemaByNamedAnchor(schemaPath, out var innerSchema))
                 return innerSchema;
@@ -38,9 +41,11 @@ internal sealed class RefWithPointerAssertion(
         throw new InvalidSchemaException($"Referenced schema '{schemaUri}' not found.");
     }
 
-    public override ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
-        _schema ??= _LoadStaticSubSchema();
-        return _schema.RootAssertion.Prepare();
+        await SyncContext.Drop();
+
+        _schema ??= await _LoadSubSchema();
+        await _schema.Prepare();
     }
 }

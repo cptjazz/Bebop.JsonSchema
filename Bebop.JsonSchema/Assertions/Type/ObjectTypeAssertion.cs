@@ -6,12 +6,12 @@ internal sealed class ObjectTypeAssertion : TypeAssertion
 {
     public static readonly ObjectTypeAssertion Instance = new();
 
-    public override bool Assert(in Token element, ErrorCollection errorCollection)
+    public override ValueTask<bool> Assert(in Token element, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind == JsonValueKind.Object) 
-            return true;
+            return ValueTask.FromResult(true);
 
-        return _AddError(errorCollection, element);
+        return ValueTask.FromResult(_AddError(errorCollection, element));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         static bool _AddError(ErrorCollection ec, in Token e)

@@ -13,7 +13,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
 
     public override string[] AssociatedKeyword => ["patternProperties"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
@@ -36,7 +36,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
 
                 var value = e.Value;
                 var h = new Token(in value, propertyPath);
-                if (!schema.Validate(h, evaluationState, errorCollection))
+                if (!await schema.Validate(h, evaluationState, errorCollection).ConfigureAwait(false))
                 {
                     isValid = false;
                     _AddError(errorCollection, name, e, h);
@@ -52,6 +52,16 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
         {
             ec.AddError($"Property '{e.Name}' does not match the schema defined by pattern '{name}'.",
                         h);
+        }
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        foreach (var (_, schema) in properties)
+        {
+            await schema.Prepare();
         }
     }
 }

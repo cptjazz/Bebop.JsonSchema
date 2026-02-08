@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Bebop.JsonSchema;
+﻿namespace Bebop.JsonSchema;
 
 internal sealed class CustomSchemaRegistry(ISchemaResolver resolver) : SchemaRegistry
 {
@@ -11,24 +9,30 @@ internal sealed class CustomSchemaRegistry(ISchemaResolver resolver) : SchemaReg
         _baseRegistry.AddSchema(schema);
     }
 
-    public override bool TryGetSchema(Uri id, [NotNullWhen(true)] out JsonSchema? schema)
+    public override async ValueTask<JsonSchema?> GetSchema(Uri id)
     {
-        if (_baseRegistry.TryGetSchema(id, out schema))
-            return true;
+        var schema = await _baseRegistry
+            .GetSchema(id)
+            .ConfigureAwait(false);
+
+        if (schema != null)
+            return schema;
 
         var resolveId = id.WithoutFragment();
 
-        var json = resolver.Resolve(resolveId);
+        var json = await resolver
+            .Resolve(resolveId)
+            .ConfigureAwait(false);
+
         if (!json.HasValue)
         {
-            schema = null;
-            return false;
+            return null;
         }
 
         // Schema must be available under its retrieval ID
-        schema = JsonSchema.Create(json.Value, this, id, true);
-        
-        return true;
+        return await JsonSchema
+            .Create(json.Value, this, id, true)
+            .ConfigureAwait(false);
     }
 
     internal override int? EstimateSize() => _baseRegistry.EstimateSize();

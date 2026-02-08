@@ -8,7 +8,7 @@ internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> p
 {
     public override string[] AssociatedKeyword => ["properties"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
         if (el.ValueKind != JsonValueKind.Object)
@@ -26,7 +26,7 @@ internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> p
                 var propertyPath = element.ElementPath.AppendPropertyName(name);
                 
                 var h = new Token(in property, propertyPath);
-                if (!schema.Validate(h, evaluationState, errorCollection))
+                if (!await schema.Validate(h, evaluationState, errorCollection).ConfigureAwait(false))
                 {
                     isValid = false;
                     _AddError(errorCollection, name, h);
@@ -46,11 +46,11 @@ internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> p
         }
     }
 
-    public override async ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
-        foreach (var (_, s) in properties)
+        foreach (var (_, schema) in properties)
         {
-            await s
+            await schema
                 .Prepare()
                 .ConfigureAwait(false);
         }

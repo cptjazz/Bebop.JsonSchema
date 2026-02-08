@@ -107,7 +107,9 @@ internal sealed class Dialect_Draft202012 : Dialect
             .ToFrozenSet();
     }
 
-    override public IReadOnlySet<string> SupportedKeywords { get; } 
+    override public IReadOnlySet<string> SupportedKeywords { get; }
+
+    public override bool IsDraft202012 => true;
 
     override public IReadOnlySet<string> GetKeywordSet(Uri vocabularyUri)
     {

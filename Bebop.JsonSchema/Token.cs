@@ -2,20 +2,20 @@
 
 namespace Bebop.JsonSchema;
 
-internal readonly ref struct Token
+internal readonly struct Token
 {
-    private readonly ref JsonElement _element;
+    private readonly JsonElement _element;
     private readonly JsonPointer _elementPath;
 
     public Token(
         ref readonly JsonElement element,
         JsonPointer elementPath)
     {
-        _element = ref Unsafe.AsRef(in element);
+        _element = element;
         _elementPath = elementPath;
     }
 
-    public ref readonly JsonElement Element => ref _element;
+    public readonly JsonElement Element => _element;
 
     public JsonPointer ElementPath => _elementPath;
 

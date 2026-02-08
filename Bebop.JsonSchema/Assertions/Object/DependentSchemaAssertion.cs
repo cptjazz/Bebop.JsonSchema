@@ -1,11 +1,13 @@
-﻿namespace Bebop.JsonSchema.Assertions.Object;
+﻿using System.Collections.Frozen;
+
+namespace Bebop.JsonSchema.Assertions.Object;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
-internal sealed class DependentSchemaAssertion(Dictionary<string, JsonSchema> properties) : Assertion
+internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
     public override string[] AssociatedKeyword { get; } = ["dependentSchemas"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Object) 
             return true;
@@ -16,7 +18,7 @@ internal sealed class DependentSchemaAssertion(Dictionary<string, JsonSchema> pr
         {
             if (element.Element.TryGetProperty(name, out _))
             {
-                if (!schema.Validate(element, evaluationState, errorCollection))
+                if (!await schema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false))
                 {
                     errorCollection.AddError($"Element did not match dependent schema '{name}'.", element);
                     isValid = false;
@@ -25,5 +27,15 @@ internal sealed class DependentSchemaAssertion(Dictionary<string, JsonSchema> pr
         }
 
         return isValid;
+    }
+
+    public override async ValueTask PrepareImpl()
+    {
+        await SyncContext.Drop();
+
+        foreach (var (_, schema) in properties)
+        {
+            await schema.Prepare();
+        }
     }
 }

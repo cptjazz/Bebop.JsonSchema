@@ -3,7 +3,7 @@
 namespace Bebop.JsonSchema.Assertions.Number;
 
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
-internal sealed class MaximumPropertyAssertion(double maximum) : NumberPropertyAssertion
+internal sealed class MaximumPropertyAssertion(double maximum) : NumberAssertion
 {
     public override string[] AssociatedKeyword => ["maximum"];
 

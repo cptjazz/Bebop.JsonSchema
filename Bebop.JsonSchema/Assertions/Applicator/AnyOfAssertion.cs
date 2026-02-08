@@ -5,7 +5,7 @@ internal sealed class AnyOfAssertion(JsonSchema[] schemas) : Assertion
 {
     public override string[] AssociatedKeyword => ["anyOf"];
 
-    public override bool Assert(in Token element, in EvaluationState evaluationState, ErrorCollection errorCollection)
+    public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var l = schemas.Length;
 
@@ -18,7 +18,7 @@ internal sealed class AnyOfAssertion(JsonSchema[] schemas) : Assertion
         foreach (var schema in schemas)
         {
             var es = evaluationState.New();
-            if (schema.Validate(element, es, errorCollection))
+            if (await schema.Validate(element, es, errorCollection).ConfigureAwait(false))
             {
                 isValid = true;
                 absorptionList.Add(es);
@@ -38,13 +38,13 @@ internal sealed class AnyOfAssertion(JsonSchema[] schemas) : Assertion
         return isValid;
     }
 
-    public override async ValueTask Prepare()
+    public override async ValueTask PrepareImpl()
     {
+        await SyncContext.Drop();
+
         foreach (var schema in schemas)
         {
-            await schema
-                .Prepare()
-                .ConfigureAwait(false);
+            await schema.Prepare();
         }
     }
 }
