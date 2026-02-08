@@ -18,10 +18,11 @@ internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var isValid = true;
+        await SyncContext.Drop();
 
         foreach (var assertion in assertions)
         {
-            if (!await assertion.Assert(element, evaluationState, errorCollection).ConfigureAwait(false))
+            if (!await assertion.Assert(element, evaluationState, errorCollection))
             {
                 isValid = false;
             }
