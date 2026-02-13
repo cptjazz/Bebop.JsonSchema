@@ -4,9 +4,41 @@
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+
+		<!-- Package Information -->
+		<PackageId>Bebop.JsonSchema</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Alexander Jesner</Authors>
+		<Company>Alexander Jesner</Company>
+		<Copyright>Copyright (c) 2025 Alexander Jesner</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<!-- Package Description -->
+		<Description>A high-performance JSON Schema validator for .NET, built on top of System.Text.Json. Supports JSON Schema Draft 2020-12 and 2019-09 with zero-allocation validation path, async-first API, and comprehensive keyword support.</Description>
+		<PackageTags>json-schema;validation;json;schema;validator;draft2020-12;draft2019-09;system-text-json;performance;bebop</PackageTags>
+		<PackageProjectUrl>https://github.com/cptjazz/Bebop.JsonSchema</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<!-- Repository Information -->
+		<RepositoryUrl>https://github.com/cptjazz/Bebop.JsonSchema</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<!-- Package Build Settings -->
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+		<!-- Source Link -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Tests.Bebop.JsonSchema" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 </Project>
