@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Array;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class UniqueItemsAssertion : ArrayAssertion
 {
@@ -32,4 +33,7 @@ internal sealed class UniqueItemsAssertion : ArrayAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "uniqueItems";
 }

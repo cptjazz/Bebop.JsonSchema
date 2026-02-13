@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
 {
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
@@ -22,4 +23,7 @@ internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
             await assertion.Prepare();
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"OR ({assertions.Length} assertions)";
 }

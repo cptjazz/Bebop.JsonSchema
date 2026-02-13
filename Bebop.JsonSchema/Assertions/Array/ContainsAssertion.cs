@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Array;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int? maxContains) : Assertion
 {
@@ -171,4 +172,7 @@ internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int
     {
         return schema.Prepare();
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"contains (min = {minContains}, max = {maxContains})";
 }

@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Array;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
 {
@@ -45,4 +46,7 @@ internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
     {
         return schema.Prepare();
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "items";
 }

@@ -1,5 +1,6 @@
 namespace Bebop.JsonSchema.Assertions.Array;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class AdditionalItemsAssertion(JsonSchema schema) : Assertion
 {
     public JsonSchema Schema { get; } = schema;
@@ -44,5 +45,8 @@ internal sealed class AdditionalItemsAssertion(JsonSchema schema) : Assertion
     {
         return schema.Prepare();
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "additionalItems";
 }
 

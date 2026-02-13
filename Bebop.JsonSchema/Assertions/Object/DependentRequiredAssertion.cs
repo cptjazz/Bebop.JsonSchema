@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string[]> properties) : Assertion
 {
@@ -32,4 +33,7 @@ internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string
 
         return ValueTask.FromResult(isValid);
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"dependentRequired ({properties.Count} properties)";
 }

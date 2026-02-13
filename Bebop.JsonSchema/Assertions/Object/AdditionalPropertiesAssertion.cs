@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Assertion
 {
@@ -50,4 +51,7 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
     {
         return schema.Prepare();
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "additionalProperties";
 }

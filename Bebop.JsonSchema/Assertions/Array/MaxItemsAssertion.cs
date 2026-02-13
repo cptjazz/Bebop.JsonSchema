@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Array;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaxItemsAssertion(int maxItems) : ArrayAssertion
 {
@@ -21,4 +22,7 @@ internal sealed class MaxItemsAssertion(int maxItems) : ArrayAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"count(items) <= {maxItems}";
 }

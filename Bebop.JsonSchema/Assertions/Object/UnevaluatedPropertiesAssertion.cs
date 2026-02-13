@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Unevaluated)]
 internal sealed class UnevaluatedPropertiesAssertion(JsonSchema schema) : Assertion
 {
@@ -37,4 +38,7 @@ internal sealed class UnevaluatedPropertiesAssertion(JsonSchema schema) : Assert
     {
         return schema.Prepare();
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "unevaluatedProperties";
 }

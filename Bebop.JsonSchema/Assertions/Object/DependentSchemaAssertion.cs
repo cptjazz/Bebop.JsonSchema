@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
@@ -36,4 +37,7 @@ internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSche
             await schema.Prepare();
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"dependentSchemas ({properties.Count} schemas)";
 }

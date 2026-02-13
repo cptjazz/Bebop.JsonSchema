@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
 {
     public static Assertion From(Assertion[] assertions)
@@ -38,4 +39,7 @@ internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
             await assertion.Prepare();
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"AND ({assertions.Length} assertions)";
 }
