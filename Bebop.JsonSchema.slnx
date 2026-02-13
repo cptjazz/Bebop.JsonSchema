@@ -2,4 +2,5 @@
   <Project Path="Benchmarks.Bebop.JsonSchema/Benchmarks.Bebop.JsonSchema.csproj" />
   <Project Path="Bebop.JsonSchema/Bebop.JsonSchema.csproj" />
   <Project Path="Tests.Bebop.JsonSchema/Tests.Bebop.JsonSchema.csproj" />
+  <Project Path="Tests.Bebop.JsonSchema.Net8/Tests.Bebop.JsonSchema.Net8.csproj" />
 </Solution>
