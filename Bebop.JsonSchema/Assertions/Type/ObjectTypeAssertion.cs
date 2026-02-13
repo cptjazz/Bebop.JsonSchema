@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Type;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class ObjectTypeAssertion : TypeAssertion
 {
     public static readonly ObjectTypeAssertion Instance = new();
@@ -20,4 +21,7 @@ internal sealed class ObjectTypeAssertion : TypeAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "type = object";
 }

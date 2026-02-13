@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Bebop.JsonSchema.Assertions.String;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class PatternAssertion(string pattern) : StringAssertion
 {
@@ -22,4 +23,7 @@ internal sealed class PatternAssertion(string pattern) : StringAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"pattern = {pattern}";
 }

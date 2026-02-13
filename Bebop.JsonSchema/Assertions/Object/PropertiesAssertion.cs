@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
@@ -53,4 +54,7 @@ internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> p
                 .ConfigureAwait(false);
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"properties ({properties.Count} properties)";
 }

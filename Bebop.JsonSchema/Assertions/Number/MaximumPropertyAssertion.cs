@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Number;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaximumPropertyAssertion(double maximum) : NumberAssertion
 {
@@ -19,4 +20,7 @@ internal sealed class MaximumPropertyAssertion(double maximum) : NumberAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"x <= {maximum}";
 }

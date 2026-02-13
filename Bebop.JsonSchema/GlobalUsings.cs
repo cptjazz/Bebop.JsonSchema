@@ -1,5 +1,6 @@
 // Global using directives
 
+global using System.Diagnostics;
 global using System.Text.Json;
 global using Bebop.JsonSchema.Comparers;
 global using Bebop.JsonSchema.Assertions;

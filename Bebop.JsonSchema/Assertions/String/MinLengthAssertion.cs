@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.String;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MinLengthAssertion(int minLength) : StringAssertion
 {
@@ -21,4 +22,7 @@ internal sealed class MinLengthAssertion(int minLength) : StringAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"len(string) >= {minLength}";
 }

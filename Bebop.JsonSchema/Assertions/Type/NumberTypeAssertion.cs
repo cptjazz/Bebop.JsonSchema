@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 namespace Bebop.JsonSchema.Assertions.Type;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class NumberTypeAssertion : TypeAssertion
 {
     public static readonly NumberTypeAssertion Instance = new();
@@ -20,4 +21,7 @@ internal sealed class NumberTypeAssertion : TypeAssertion
             return false;
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "type = number";
 }

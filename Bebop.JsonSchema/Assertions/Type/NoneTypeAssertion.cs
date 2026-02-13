@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Type;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class NoneTypeAssertion : TypeAssertion
 {
     public static NoneTypeAssertion Instance { get; } = new();
@@ -9,4 +10,7 @@ internal sealed class NoneTypeAssertion : TypeAssertion
         errorCollection.AddError("Value does not match any allowed type.", element);
         return ValueTask.FromResult(false);
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => "nothing";
 }

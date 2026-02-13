@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
 {
@@ -33,4 +34,7 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
             ec.AddError($"Object is missing required property '{p}'", e);
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"required ({requiredProperties.Length} properties)";
 }

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
@@ -62,4 +63,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
             await schema.Prepare();
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"patternProperties ({properties.Count} patterns)";
 }

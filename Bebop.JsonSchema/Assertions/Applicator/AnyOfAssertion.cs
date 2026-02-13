@@ -1,5 +1,6 @@
 ﻿namespace Bebop.JsonSchema.Assertions.Applicator;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class AnyOfAssertion(JsonSchema[] schemas) : Assertion
 {
@@ -45,4 +46,7 @@ internal sealed class AnyOfAssertion(JsonSchema[] schemas) : Assertion
             await schema.Prepare();
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"anyOf ({schemas.Length} schemas)";
 }

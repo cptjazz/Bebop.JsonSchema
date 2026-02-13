@@ -2,6 +2,7 @@
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaxPropertiesPropertyAssertion(int maxProperties) : Assertion
 {
@@ -25,4 +26,7 @@ internal sealed class MaxPropertiesPropertyAssertion(int maxProperties) : Assert
             ec.AddError($"Object must have at most {m} properties", e);
         }
     }
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebuggerDisplay => $"count(properties) <= {maxProperties}";
 }
