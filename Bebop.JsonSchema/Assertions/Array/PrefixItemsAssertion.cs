@@ -3,8 +3,6 @@
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
 {
-    public override string[] AssociatedKeyword => ["prefixItems"];
-
     public JsonSchema[] Schemas { get; } = schemas;
 
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

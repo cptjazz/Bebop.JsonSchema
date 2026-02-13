@@ -5,8 +5,6 @@ internal sealed class ConstAssertion(JsonElement constant) : PreparedAssertion
 {
     private readonly IJsonValueComparer _comparer = _GetComparer(constant);
 
-    public override string[] AssociatedKeyword => ["const"];
-
     private static IJsonValueComparer _GetComparer(in JsonElement c)
     {
         return c.ValueKind switch

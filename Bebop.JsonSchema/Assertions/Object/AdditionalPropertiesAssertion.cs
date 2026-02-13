@@ -7,8 +7,6 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
 {
     public override int Order => 99;
 
-    public override string[] AssociatedKeyword => ["additionalProperties"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

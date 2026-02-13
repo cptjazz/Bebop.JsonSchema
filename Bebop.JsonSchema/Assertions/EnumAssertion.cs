@@ -5,8 +5,6 @@ namespace Bebop.JsonSchema.Assertions;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class EnumAssertion(JsonElement[] elements) : PreparedAssertion
 {
-    public override string[] AssociatedKeyword => ["enum"];
-
     public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

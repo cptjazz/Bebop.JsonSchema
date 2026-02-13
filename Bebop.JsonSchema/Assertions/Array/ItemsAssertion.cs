@@ -5,8 +5,6 @@ internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
 {
     public JsonSchema Schema { get; } = schema;
 
-    public override string[] AssociatedKeyword => ["items"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

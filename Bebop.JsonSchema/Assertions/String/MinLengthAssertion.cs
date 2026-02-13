@@ -6,8 +6,6 @@ namespace Bebop.JsonSchema.Assertions.String;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MinLengthAssertion(int minLength) : StringAssertion
 {
-    public override string[] AssociatedKeyword => ["minLength"];
-
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         var si = new StringInfo(text);

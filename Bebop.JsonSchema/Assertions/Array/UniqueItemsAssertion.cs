@@ -7,8 +7,6 @@ internal sealed class UniqueItemsAssertion : ArrayAssertion
 {
     public static readonly UniqueItemsAssertion Instance = new();
 
-    public override string[] AssociatedKeyword => ["uniqueItems"];
-
     public override bool Assert(in Token array, ErrorCollection errorCollection)
     {
         var seenItems = new HashSet<JsonElement>(JsonComparer.Instance);

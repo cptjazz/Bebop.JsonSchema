@@ -3,8 +3,6 @@
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Unevaluated)]
 internal sealed class UnevaluatedItemsAssertion(JsonSchema schema) : Assertion
 {
-    public override string[] AssociatedKeyword => ["unevaluatedItems"];
-
     public override int Order => 1000;
 
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

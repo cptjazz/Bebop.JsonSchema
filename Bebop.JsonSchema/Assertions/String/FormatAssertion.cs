@@ -2,8 +2,6 @@
 
 internal sealed class FormatAssertion(Func<string, bool> predicate) : StringAssertion
 {
-    public override string[] AssociatedKeyword => ["format"];
-
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind is not JsonValueKind.String)

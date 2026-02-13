@@ -5,8 +5,6 @@ namespace Bebop.JsonSchema.Assertions.Number;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ExclusiveMaximumPropertyAssertion(double exclusiveMaximum) : NumberAssertion
 {
-    public override string[] AssociatedKeyword => ["exclusiveMaximum"];
-
     protected override bool Assert(double value, in Token element, ErrorCollection errorCollection)
     {
         if (!(value >= exclusiveMaximum)) 

@@ -3,8 +3,6 @@
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ContainsAssertion(JsonSchema schema, int? minContains, int? maxContains) : Assertion
 {
-    public override string[] AssociatedKeyword => ["contains", "minContains", "maxContains"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)

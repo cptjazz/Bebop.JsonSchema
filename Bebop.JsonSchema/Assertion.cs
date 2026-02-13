@@ -9,9 +9,6 @@ internal abstract class Assertion
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public virtual int Order => 0;
 
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public abstract string[] AssociatedKeyword { get; }
-
     public virtual async ValueTask Prepare()
     {
         if (IsPrepared)

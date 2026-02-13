@@ -11,8 +11,6 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
             x => x.Key, 
             x => new Regex(x.Key, RegexOptions.Compiled | RegexOptions.ECMAScript));
 
-    public override string[] AssociatedKeyword => ["patternProperties"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

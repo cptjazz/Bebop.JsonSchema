@@ -2,8 +2,6 @@
 
 internal sealed class AndCombinedAssertion(Assertion[] assertions) : Assertion
 {
-    public override string[] AssociatedKeyword => [];
-
     public static Assertion From(Assertion[] assertions)
     {
         if (assertions.Length == 0)

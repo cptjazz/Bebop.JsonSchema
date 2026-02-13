@@ -9,8 +9,6 @@ internal sealed class RefWithPointerAssertion(
 {
     private JsonSchema? _schema;
 
-    public override string[] AssociatedKeyword => ["$ref"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         EnsurePrepared();

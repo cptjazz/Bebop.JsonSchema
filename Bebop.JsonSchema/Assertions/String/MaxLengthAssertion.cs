@@ -6,8 +6,6 @@ namespace Bebop.JsonSchema.Assertions.String;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaxLengthAssertion(int maxLength) : StringAssertion
 {
-    public override string[] AssociatedKeyword => ["maxLength"];
-
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         var si = new StringInfo(text);

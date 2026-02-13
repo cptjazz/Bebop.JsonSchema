@@ -7,8 +7,6 @@ internal sealed class DynamicRefWithPointerAssertion(
     JsonPointer schemaPath)
     : Assertion
 {
-    public override string[] AssociatedKeyword => ["$dynamicRef"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var schema = await _LoadDynamicSubSchema(evaluationState).ConfigureAwait(false);

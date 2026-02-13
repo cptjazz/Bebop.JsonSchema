@@ -3,8 +3,6 @@
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class CombinedItemsPrefixItemsAssertion(JsonSchema[] prefixItemsSchemas, JsonSchema itemsSchema) : Assertion
 {
-    public override string[] AssociatedKeyword => ["items", "prefixItems"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Array)

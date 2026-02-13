@@ -5,8 +5,6 @@ namespace Bebop.JsonSchema.Assertions.Applicator;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class NotAssertion(JsonSchema schema) : Assertion
 {
-    public override string[] AssociatedKeyword => ["not"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         var es = evaluationState.New();

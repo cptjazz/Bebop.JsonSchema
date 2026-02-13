@@ -6,8 +6,6 @@ namespace Bebop.JsonSchema.Assertions.Object;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
-    public override string[] AssociatedKeyword => ["properties"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

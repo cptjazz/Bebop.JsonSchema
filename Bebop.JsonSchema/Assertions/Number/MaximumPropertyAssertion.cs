@@ -5,8 +5,6 @@ namespace Bebop.JsonSchema.Assertions.Number;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaximumPropertyAssertion(double maximum) : NumberAssertion
 {
-    public override string[] AssociatedKeyword => ["maximum"];
-
     protected override bool Assert(double value, in Token element, ErrorCollection errorCollection)
     {
         if (value <= maximum) 

@@ -5,8 +5,6 @@ namespace Bebop.JsonSchema.Assertions.Array;
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MinItemsAssertion(int minItems) : ArrayAssertion
 {
-    public override string[] AssociatedKeyword => ["minItems"];
-
     public override bool Assert(in Token array, ErrorCollection errorCollection)
     {
         var count = array.Element.GetArrayLength();

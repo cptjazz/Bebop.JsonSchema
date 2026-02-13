@@ -5,8 +5,6 @@ internal sealed class RefAssertion(Uri schemaUri, SchemaRegistry repo) : Asserti
 {
     private JsonSchema? _schema;
 
-    public override string[] AssociatedKeyword => ["$ref"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         EnsurePrepared();

@@ -4,8 +4,6 @@
 internal sealed class ConditionalAssertion(JsonSchema ifSchema, JsonSchema thenSchema, JsonSchema elseSchema)
     : Assertion
 {
-    public override string[] AssociatedKeyword => ["if", "then", "else"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         return await ifSchema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false)

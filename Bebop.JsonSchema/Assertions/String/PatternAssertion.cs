@@ -8,8 +8,6 @@ internal sealed class PatternAssertion(string pattern) : StringAssertion
 {
     private readonly Regex _regex = new(pattern, RegexOptions.Compiled | RegexOptions.ECMAScript);
 
-    public override string[] AssociatedKeyword => ["pattern"];
-
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         if (_regex.IsMatch(text))

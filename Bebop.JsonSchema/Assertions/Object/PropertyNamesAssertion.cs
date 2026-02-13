@@ -3,8 +3,6 @@
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PropertyNamesAssertion(JsonSchema schema) : Assertion
 {
-    public override string[] AssociatedKeyword => ["propertyNames"];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;

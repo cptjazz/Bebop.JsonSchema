@@ -2,8 +2,6 @@
 
 internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
 {
-    public override string[] AssociatedKeyword => [];
-
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         for (var i = 0; i < assertions.Length; i++)
