@@ -256,38 +256,63 @@ internal static class SchemaParser
             }
         }
 
-        var items = assertions.OfType<ItemsAssertion>().FirstOrDefault();
-        var prefixItems = assertions.OfType<PrefixItemsAssertion>().FirstOrDefault();
-        var additionalItems = assertions.OfType<AdditionalItemsAssertion>().FirstOrDefault();
+        if (dialect.IsDraft202012)
+            _Blubb2020(assertions);
 
-        if (items is not null && additionalItems is not null)
-        {
-            // 2019-09: when items is schema, additionalItems does nothing
-            assertions.Remove(additionalItems);
-            additionalItems = null;
-        }
-
-        if (additionalItems is not null)
-        {
-            items = new ItemsAssertion(additionalItems.Schema);
-            assertions.Remove(additionalItems);
-            assertions.Add(items);
-        }
-
-        if (items is not null && prefixItems is not null)
-        {
-            var x = new CombinedItemsPrefixItemsAssertion(prefixItems.Schemas, items.Schema);
-            
-            assertions.Remove(items);
-            assertions.Remove(prefixItems);
-            assertions.Add(x);
-        }
+        if (dialect.IsDraft201909)
+             _Blubb2019(assertions);
 
         var finalAssertions = assertions
             .OrderBy(x => x.Order)
             .ToArray();
 
         return AndCombinedAssertion.From(finalAssertions);
+    }
+
+    private static void _Blubb2020(List<Assertion> assertions)
+    {
+        var items = assertions.OfType<ItemsAssertion>().FirstOrDefault();
+        var prefixItems = assertions.OfType<PrefixItemsAssertion>().FirstOrDefault();
+
+        if (items is not null && prefixItems is not null)
+        {
+            var x = new CombinedItemsPrefixItemsAssertion(prefixItems.Schemas, items.Schema);
+
+            assertions.Remove(items);
+            assertions.Remove(prefixItems);
+            assertions.Add(x);
+        }
+    }
+
+    private static void _Blubb2019(List<Assertion> assertions)
+    {
+        var items = assertions.OfType<ItemsAssertion>().FirstOrDefault();
+        var prefixItems = assertions.OfType<PrefixItemsAssertion>().FirstOrDefault();
+        var additionalItems = assertions.OfType<AdditionalItemsAssertion>().FirstOrDefault();
+
+        if (additionalItems is not null)
+        {
+            if (items is null)
+            {
+                if (prefixItems is not null)
+                {
+                    items = new ItemsAssertion(additionalItems.Schema);
+                    assertions.Add(items);
+                }
+            } 
+
+            assertions.Remove(additionalItems);
+            additionalItems = null;
+        }
+
+        if (items is not null && prefixItems is not null)
+        {
+            var x = new CombinedItemsPrefixItemsAssertion(prefixItems.Schemas, items.Schema);
+
+            assertions.Remove(items);
+            assertions.Remove(prefixItems);
+            assertions.Add(x);
+        }
     }
 
     private static async ValueTask<Assertion> _ItemsAssertion(JsonSchema outerSchema, JsonSchema baseSchema, Dialect dialect, JsonElement propertyValue, JsonPointer ptb)
