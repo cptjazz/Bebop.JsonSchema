@@ -8,5 +8,6 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Tests.Bebop.JsonSchema" />
+		<InternalsVisibleTo Include="Tests.Bebop.JsonSchema.Net8" />
 	</ItemGroup>
 </Project>
