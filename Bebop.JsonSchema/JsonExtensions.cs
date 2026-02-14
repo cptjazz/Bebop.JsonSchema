@@ -96,27 +96,6 @@ internal static class JsonExtensions
         return property.Value.EnumerateArray();
     }
 
-
-    public static bool ExpectBool(this JsonElement element)
-    {
-        if (element.ValueKind is not JsonValueKind.True and not JsonValueKind.False)
-        {
-            throw new InvalidSchemaException("Expected a number.", element);
-        }
-
-        return element.GetBoolean();
-    }
-
-    public static long ExpectNumber(this JsonElement element)
-    {
-        if (element.ValueKind != JsonValueKind.Number)
-        {
-            throw new InvalidSchemaException("Expected a number.", element);
-        }
-
-        return element.GetInt64();
-    }
-
     public static bool ExpectBoolean(this JsonElement element)
     {
         if (element.ValueKind != JsonValueKind.True && element.ValueKind != JsonValueKind.False)
