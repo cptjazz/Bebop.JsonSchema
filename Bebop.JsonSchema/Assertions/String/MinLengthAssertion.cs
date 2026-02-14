@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.String;
@@ -23,6 +23,7 @@ internal sealed class MinLengthAssertion(int minLength) : StringAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"len(string) >= {minLength}";
 }

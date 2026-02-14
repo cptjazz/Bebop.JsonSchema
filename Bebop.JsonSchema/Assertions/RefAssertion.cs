@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema.Assertions;
+namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Core)]
@@ -34,6 +34,7 @@ internal sealed class RefAssertion(Uri schemaUri, SchemaRegistry repo) : Asserti
         await _schema.Prepare();
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"$ref → {schemaUri}";
 }

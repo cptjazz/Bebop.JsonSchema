@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
@@ -52,6 +52,7 @@ internal sealed class AdditionalPropertiesAssertion(JsonSchema schema) : Asserti
         return schema.Prepare();
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => "additionalProperties";
 }

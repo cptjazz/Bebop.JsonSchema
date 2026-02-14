@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
@@ -35,6 +35,7 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"required ({requiredProperties.Length} properties)";
 }

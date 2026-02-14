@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions;
 
@@ -28,6 +28,7 @@ internal sealed class EnumAssertion(JsonElement[] elements) : PreparedAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"enum ({elements.Length} values)";
 }

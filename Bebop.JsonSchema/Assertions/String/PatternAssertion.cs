@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Bebop.JsonSchema.Assertions.String;
@@ -24,6 +24,7 @@ internal sealed class PatternAssertion(string pattern) : StringAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"pattern = {pattern}";
 }

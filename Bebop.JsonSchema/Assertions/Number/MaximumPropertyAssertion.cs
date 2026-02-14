@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Number;
 
@@ -21,6 +21,7 @@ internal sealed class MaximumPropertyAssertion(double maximum) : NumberAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"x <= {maximum}";
 }

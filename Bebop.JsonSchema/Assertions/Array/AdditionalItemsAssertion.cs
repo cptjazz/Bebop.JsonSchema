@@ -46,6 +46,7 @@ internal sealed class AdditionalItemsAssertion(JsonSchema schema) : Assertion
         return Schema.Prepare();
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private static string DebuggerDisplay => "additionalItems";
 }

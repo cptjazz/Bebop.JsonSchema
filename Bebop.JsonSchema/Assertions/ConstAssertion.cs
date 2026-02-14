@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema.Assertions;
+namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
@@ -37,6 +37,7 @@ internal sealed class ConstAssertion(JsonElement constant) : PreparedAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"const = {constant.GetRawText()}";
 }

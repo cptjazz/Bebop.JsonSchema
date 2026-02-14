@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema.Assertions;
+namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 [SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Core)]
@@ -62,6 +62,7 @@ internal sealed class DynamicRefWithPointerAssertion(
         throw new InvalidSchemaException($"Referenced schema '{schemaUri}' not found.");
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"$dynamicRef → {schemaUri}#{schemaPath}";
 }

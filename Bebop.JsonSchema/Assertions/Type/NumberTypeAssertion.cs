@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Bebop.JsonSchema.Assertions.Type;
@@ -22,6 +22,7 @@ internal sealed class NumberTypeAssertion : TypeAssertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => "type = number";
 }

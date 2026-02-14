@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 
 namespace Bebop.JsonSchema.Assertions.Object;
@@ -64,6 +64,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"patternProperties ({properties.Count} patterns)";
 }

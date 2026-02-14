@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema.Assertions;
+namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
@@ -24,6 +24,7 @@ internal sealed class OrCombinedAssertion(Assertion[] assertions) : Assertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"OR ({assertions.Length} assertions)";
 }

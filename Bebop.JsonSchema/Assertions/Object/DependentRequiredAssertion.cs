@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
@@ -34,6 +34,7 @@ internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string
         return ValueTask.FromResult(isValid);
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"dependentRequired ({properties.Count} properties)";
 }

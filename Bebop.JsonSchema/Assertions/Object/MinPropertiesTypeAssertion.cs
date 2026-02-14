@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
@@ -27,6 +27,7 @@ internal sealed class MinPropertiesAssertion(int minProperties) : Assertion
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"count(properties) >= {minProperties}";
 }

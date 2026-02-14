@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Applicator;
 
@@ -32,6 +32,7 @@ internal sealed class NotAssertion(JsonSchema schema) : Assertion
         return schema.Prepare();
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => "not";
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema.Assertions.Object;
@@ -55,6 +55,7 @@ internal sealed class PropertiesAssertion(FrozenDictionary<string, JsonSchema> p
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"properties ({properties.Count} properties)";
 }

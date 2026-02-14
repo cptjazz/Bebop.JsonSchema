@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Bebop.JsonSchema;
 
@@ -65,6 +65,7 @@ public sealed class JsonSchema
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal Dialect Dialect { get; }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal string DebuggerDisplay => $"{Path}";
 

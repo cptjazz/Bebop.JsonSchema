@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema.Assertions.Type;
+namespace Bebop.JsonSchema.Assertions.Type;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class NoneTypeAssertion : TypeAssertion
@@ -11,6 +11,7 @@ internal sealed class NoneTypeAssertion : TypeAssertion
         return ValueTask.FromResult(false);
     }
 
+    [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => "nothing";
 }
