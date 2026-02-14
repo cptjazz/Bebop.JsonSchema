@@ -46,12 +46,12 @@ internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
     {
         await SyncContext.Drop();
 
-        foreach (var schema in schemas)
+        foreach (var schema in Schemas)
         {
             await schema.Prepare();
         }
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"prefixItems ({schemas.Length} schemas)";
+    private string DebuggerDisplay => $"prefixItems ({Schemas.Length} schemas)";
 }

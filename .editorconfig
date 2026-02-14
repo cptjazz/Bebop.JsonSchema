@@ -1,0 +1,25 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+
+# Naming rules
+
+# Private methods may start with an underscore
+dotnet_naming_rule.private_methods_with_underscore.symbols = private_methods
+dotnet_naming_rule.private_methods_with_underscore.style = underscore_prefix_style
+dotnet_naming_rule.private_methods_with_underscore.severity = suggestion
+
+dotnet_naming_symbols.private_methods.applicable_kinds = method
+dotnet_naming_symbols.private_methods.applicable_accessibilities = private
+dotnet_naming_symbols.private_methods.required_modifiers =
+
+dotnet_naming_style.underscore_prefix_style.required_prefix = _
+dotnet_naming_style.underscore_prefix_style.capitalization = pascal_case

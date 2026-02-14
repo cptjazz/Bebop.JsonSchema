@@ -44,9 +44,9 @@ internal sealed class ItemsAssertion(JsonSchema schema) : Assertion
 
     public override ValueTask PrepareImpl()
     {
-        return schema.Prepare();
+        return Schema.Prepare();
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => "items";
+    private static string DebuggerDisplay => "items";
 }

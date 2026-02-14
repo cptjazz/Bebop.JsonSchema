@@ -3,16 +3,16 @@ using Bebop.JsonSchema;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 
-namespace Benchmarks;
+namespace Benchmarks.Bebop.JsonSchema;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net10_0)]
 public class ValidationBenchmarks
 {
-    private JsonDocument _personTestData1;
-    private JsonSchema _personSchema;
-    private Json.Schema.JsonSchema _personSchemaJE;
+    private JsonDocument? _personTestData1;
+    private global::Bebop.JsonSchema.JsonSchema? _personSchema;
+    private Json.Schema.JsonSchema? _personSchemaJE;
 
     [GlobalSetup]
     public async Task Setup()
@@ -233,7 +233,7 @@ public class ValidationBenchmarks
                                }
 
                                """;
-        _personSchema = await JsonSchema.Create(personSchemaText);
+        _personSchema = await global::Bebop.JsonSchema.JsonSchema.Create(personSchemaText);
         await _personSchema.Prepare();
 
         _personSchemaJE = Json.Schema.JsonSchema.FromText(personSchemaText);
@@ -305,13 +305,13 @@ public class ValidationBenchmarks
     public async Task<bool> Validate_Person()
     {
         var errorCollection = new ErrorCollection();
-        return await _personSchema.Validate(_personTestData1.RootElement, errorCollection);
+        return await _personSchema!.Validate(_personTestData1!.RootElement, errorCollection);
     }
 
     [Benchmark]
     public bool Validate_Person_JE()
     {
-        var r = _personSchemaJE.Evaluate(_personTestData1.RootElement);
+        var r = _personSchemaJE!.Evaluate(_personTestData1!.RootElement);
         return r.IsValid;
     }
 }
