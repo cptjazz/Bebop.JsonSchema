@@ -46,14 +46,13 @@ jobs:
         name: coverage-report
         path: coverage-report/
     
-    - name: Upload coverage to Codecov
+    - name: Upload coverage to Coveralls
       if: matrix.dotnet-version == '10.0'
-      uses: codecov/codecov-action@v5
+      uses: coverallsapp/github-action@v2
       with:
-        files: Tests.Bebop.JsonSchema/bin/Release/net10.0/TestResults/coverage.cobertura.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: Tests.Bebop.JsonSchema/bin/Release/net10.0/TestResults/coverage.cobertura.xml
+        format: cobertura
     
     - name: Upload test results
       if: always()

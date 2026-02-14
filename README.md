@@ -1,7 +1,7 @@
 # Bebop.JsonSchema
 
 [![Build and Test](https://github.com/cptjazz/Bebop.JsonSchema/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cptjazz/Bebop.JsonSchema/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/cptjazz/Bebop.JsonSchema/branch/main/graph/badge.svg)](https://codecov.io/gh/cptjazz/Bebop.JsonSchema)
+[![Coverage Status](https://coveralls.io/repos/github/cptjazz/Bebop.JsonSchema/badge.svg?branch=main)](https://coveralls.io/github/cptjazz/Bebop.JsonSchema?branch=main)
 
 A high-performance JSON Schema validator for .NET, built on top of `System.Text.Json`.
 
