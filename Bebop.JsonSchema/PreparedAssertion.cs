@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema;
+namespace Bebop.JsonSchema;
 
 internal abstract class PreparedAssertion : Assertion
 {
@@ -8,6 +8,4 @@ internal abstract class PreparedAssertion : Assertion
     }
 
     public sealed override ValueTask Prepare() => ValueTask.CompletedTask;
-
-    public sealed override ValueTask PrepareImpl() => ValueTask.CompletedTask;
 }
