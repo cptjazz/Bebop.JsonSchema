@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema;
+namespace Bebop.JsonSchema;
 
 internal static class JsonExtensions
 {
@@ -176,13 +176,4 @@ internal static class JsonExtensions
         var str = element.GetString();
         return str ?? throw new InvalidSchemaException("Expected a non-null string.", element);
     }
-
-#if NET8_0
-
-    public static int GetPropertyCount(this in JsonElement element)
-    {
-        return element.EnumerateObject().Count();
-    }
-
-#endif
 }
