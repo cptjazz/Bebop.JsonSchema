@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Bebop.JsonSchema;
 
@@ -28,6 +28,7 @@ internal static class Assume
     internal sealed class FalseAssumption : Assumption
     {
         public static readonly FalseAssumption Instance = new();
+        [DoesNotReturn]
         public override void OtherwiseThrow(Func<Exception> exceptionFactory)
         {
             throw exceptionFactory();
