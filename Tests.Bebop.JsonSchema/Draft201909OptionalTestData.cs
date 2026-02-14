@@ -5,7 +5,7 @@ namespace Tests.MyJsonSchema;
 
 public sealed class Draft201909OptionalTestData : TestDataBase, IEnumerable<object[]>
 {
-    private const string TestDataPath = @"TestData\draft2019-09\optional";
+    private const string TestDataPath = "TestData/draft2019-09/optional";
 
     public IEnumerator<object[]> GetEnumerator()
     {
