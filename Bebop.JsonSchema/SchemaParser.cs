@@ -32,6 +32,9 @@ internal static class SchemaParser
                                          throw new InvalidSchemaException("Unable to find custom meta-schema"));
 
         var js = new JsonSchema(id, repo, anchors, isAnon, dialect);
+
+        anchors.AddAnonymousAnchor(JsonPointer.Hash, js);
+
         js.RootAssertion = await _ParseAssertions(element, anchors, js, js, JsonPointer.Root, dialect);
         _AddMetaInfo(js, element);
         js.Path = JsonPointer.Root;
@@ -88,6 +91,8 @@ internal static class SchemaParser
             // The inner schema defined a definite $id which means it must be resolvable
             outerSchema.Repository.AddSchema(js);
             baseSchema = js;
+
+            anchors.AddAnonymousAnchor(JsonPointer.Hash, js);
         }
 
         js.RootAssertion = await _ParseAssertions(element, anchors, js, baseSchema, pathToBase, dialect);
@@ -165,7 +170,9 @@ internal static class SchemaParser
                     "$dynamicRef" or "$recursiveRef" => _Resolve(propertyValue.ExpectUri(), outerSchema, baseSchema, true),
                     "$anchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, false),
                     "$dynamicAnchor" => _ParseAnchor(propertyValue.ExpectString(), anchors, outerSchema, true),
-                    "$recursiveAnchor" => _ParseAnchor("#", anchors, outerSchema, true),
+                    "$recursiveAnchor" => propertyValue.GetBoolean()
+                        ? _ParseAnchor("#", anchors, outerSchema, true)
+                        : null,
 
                     // String specific
                     "minLength" => new MinLengthAssertion(property.ExpectNonNegativeCount()),
@@ -515,7 +522,9 @@ internal static class SchemaParser
                 Assume.That(hasFrag).OtherwiseThrow(() => new InvalidSchemaException($"Invalid relative URI '{refUri}'"));
                 // reference to current document via #
                 if (frag.Equals("#", StringComparison.Ordinal))
-                    return new RefAssertion(baseSchemaId, repo);
+                    return isDynamic
+                        ? new DynamicRefWithPointerAssertion(baseSchemaId, repo, JsonPointer.Parse("#"))
+                        : new RefAssertion(baseSchemaId, repo);
 
                 return isDynamic
                     ? new DynamicRefWithPointerAssertion(baseSchemaId, repo, JsonPointer.ParseFromUriFragment(frag[1..]))

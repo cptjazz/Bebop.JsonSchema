@@ -31,17 +31,20 @@ internal sealed class DynamicRefWithPointerAssertion(
                 return inn;
             }
 
-            foreach (var s in evaluationState.SchemaStack)
-            {
-                if (s.Anchors.TryGetSchemaDynamicNamedAnchor(schemaPath, out var inner))
-                {
-                    await inner.Prepare();
-                    return inner;
-                }
-            }
-
+            // Only walk the schema stack if the target schema itself has a matching $dynamicAnchor/$recursiveAnchor.
+            // If the target does not define a dynamic anchor, the ref should resolve to the target directly
+            // (e.g., $recursiveRef with no $recursiveAnchor in the target schema).
             if (schema.Anchors.TryGetSchemaDynamicNamedAnchor(schemaPath, out var innerSchema))
             {
+                foreach (var s in evaluationState.SchemaStack)
+                {
+                    if (s.Anchors.TryGetSchemaDynamicNamedAnchor(schemaPath, out var inner))
+                    {
+                        await inner.Prepare();
+                        return inner;
+                    }
+                }
+
                 await innerSchema.Prepare();
                 return innerSchema;
             }

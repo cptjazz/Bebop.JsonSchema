@@ -13,7 +13,9 @@ internal readonly struct JsonPointer : IEquatable<JsonPointer>
     private readonly int _hc;
 
     public static readonly JsonPointer Root = new("");
-    
+
+    public static readonly JsonPointer Hash = new("#");
+
     internal JsonPointer(string pointer)
     {
         _pointer = pointer;
