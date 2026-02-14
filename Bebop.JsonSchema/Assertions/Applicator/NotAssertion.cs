@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions.Applicator;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class NotAssertion(JsonSchema schema) : Assertion
 {
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

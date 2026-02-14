@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class EnumAssertion(JsonElement[] elements) : PreparedAssertion
 {
     public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

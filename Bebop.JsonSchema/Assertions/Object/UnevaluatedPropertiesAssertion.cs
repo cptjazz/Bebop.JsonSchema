@@ -1,7 +1,6 @@
 namespace Bebop.JsonSchema.Assertions.Object;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Unevaluated)]
 internal sealed class UnevaluatedPropertiesAssertion(JsonSchema schema) : Assertion
 {
     public override int Order => 1000;

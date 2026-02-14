@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions.String;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class MaxLengthAssertion(int maxLength) : StringAssertion
 {
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)

@@ -3,7 +3,6 @@ using System.Collections.Frozen;
 namespace Bebop.JsonSchema.Assertions.Object;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class DependentRequiredAssertion(FrozenDictionary<string, string[]> properties) : Assertion
 {
     public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

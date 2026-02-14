@@ -1,7 +1,6 @@
 namespace Bebop.JsonSchema.Assertions.Array;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PrefixItemsAssertion(JsonSchema[] schemas) : Assertion
 {
     public JsonSchema[] Schemas { get; } = schemas;

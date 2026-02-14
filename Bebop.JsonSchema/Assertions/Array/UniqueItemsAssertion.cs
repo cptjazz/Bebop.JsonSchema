@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions.Array;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class UniqueItemsAssertion : ArrayAssertion
 {
     public static readonly UniqueItemsAssertion Instance = new();

@@ -1,6 +1,5 @@
-﻿namespace Bebop.JsonSchema.Assertions.Type;
+namespace Bebop.JsonSchema.Assertions.Type;
 
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal abstract class TypeAssertion : PreparedAssertion
 {
     public sealed override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)

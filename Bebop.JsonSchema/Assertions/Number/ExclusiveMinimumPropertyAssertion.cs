@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions.Number;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ExclusiveMinimumPropertyAssertion(double exclusiveMinimum) : NumberAssertion
 {
     protected override bool Assert(double value, in Token element, ErrorCollection errorCollection)

@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 namespace Bebop.JsonSchema.Assertions.Object;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Applicator)]
 internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
     private readonly FrozenDictionary<string, Regex> _regexes = properties

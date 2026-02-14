@@ -1,7 +1,6 @@
 namespace Bebop.JsonSchema.Assertions;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-[SchemaApplicability(SchemaVersion.Draft2020_12, Vocabularies_Draft202012.Validation)]
 internal sealed class ConstAssertion(JsonElement constant) : PreparedAssertion
 {
     private readonly IJsonValueComparer _comparer = _GetComparer(constant);
