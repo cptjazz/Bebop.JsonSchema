@@ -1,5 +1,3 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Bebop.JsonSchema;
@@ -45,8 +43,9 @@ internal readonly struct JsonPointer : IEquatable<JsonPointer>
             return Root;
         }
 
-
-        Span<char> target = stackalloc char[pointer.Length];
+        Span<char> target = pointer.Length < 1024
+            ? stackalloc char[pointer.Length]
+            : new char[pointer.Length];
 
         var i = 0;
         var absPos = 0;
