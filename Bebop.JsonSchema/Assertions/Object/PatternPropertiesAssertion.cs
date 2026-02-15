@@ -9,7 +9,7 @@ internal sealed class PatternPropertiesAssertion(FrozenDictionary<string, JsonSc
     private readonly FrozenDictionary<string, Regex> _regexes = properties
         .ToFrozenDictionary(
             x => x.Key, 
-            x => new Regex(x.Key, RegexOptions.Compiled | RegexOptions.ECMAScript));
+            x => new Regex(RegexNormalizer.Normalize(x.Key), RegexOptions.Compiled | RegexOptions.ECMAScript));
 
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {

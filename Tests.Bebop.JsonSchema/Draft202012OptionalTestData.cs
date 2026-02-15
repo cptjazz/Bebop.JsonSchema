@@ -12,6 +12,11 @@ public sealed class Draft202012OptionalTestData : TestDataBase, IEnumerable<obje
         var di = new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, TestDataPath));
         var files = di.GetFiles("*.json");
 
+        files = files
+            // Exclude because .NET's regex engine does not properly support higher planes
+            .Where(f => !f.Name.Equals("non-bmp-regex.json", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
         return GetTests(files);
     }
 
