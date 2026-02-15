@@ -1,5 +1,3 @@
-﻿using System.Globalization;
-
 namespace Bebop.JsonSchema;
 
 public abstract class SchemaRegistry
@@ -21,10 +19,22 @@ public abstract class SchemaRegistry
 
     internal Uri MakeRandomUri()
     {
-        string relative = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-
-        return new Uri($"schema:anonymous/{relative}");
+        return new Uri(FallbackRetrievalUri, AlphaNum());
     }
 
     internal virtual int? EstimateSize() => null;
+
+    internal virtual Uri FallbackRetrievalUri { get; } = new Uri($"schema:anonymous/{AlphaNum()}/");
+
+    internal static string AlphaNum(int length = 12)
+    {
+        return string.Create(length, (object?)null, static (span, _) =>
+        {
+            ReadOnlySpan<char> chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            for (int i = 0; i < span.Length; i++)
+            {
+                span[i] = chars[Random.Shared.Next(chars.Length)];
+            }
+        });
+    }
 }

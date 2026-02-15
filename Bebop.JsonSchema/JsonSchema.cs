@@ -84,12 +84,22 @@ public sealed class JsonSchema
 
     public static ValueTask<JsonSchema> Create(JsonDocument document, SchemaRegistry repository)
     {
-        return Create(document.RootElement.Clone(), repository, null, true);
+        return Create(document.RootElement.Clone(), repository, repository.FallbackRetrievalUri, true);
     }
 
     public static ValueTask<JsonSchema> Create(JsonElement document, SchemaRegistry repository)
     {
-        return Create(document, repository, null, true);
+        return Create(document, repository, repository.FallbackRetrievalUri, true);
+    }
+
+    public static ValueTask<JsonSchema> Create(JsonDocument document, Uri retrievalUri, SchemaRegistry repository)
+    {
+        return Create(document.RootElement.Clone(), repository, retrievalUri, true);
+    }
+
+    public static ValueTask<JsonSchema> Create(JsonElement document, Uri retrievalUri, SchemaRegistry repository)
+    {
+        return Create(document, repository, retrievalUri, true);
     }
 
     internal static async ValueTask<JsonSchema> Create(JsonElement element, SchemaRegistry repository, Uri? retrievalUri, bool addToRepo)

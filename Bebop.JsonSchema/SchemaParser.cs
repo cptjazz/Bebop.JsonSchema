@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 
 namespace Bebop.JsonSchema;
 
@@ -10,10 +10,19 @@ internal static class SchemaParser
 
         var isAnon = false;
         var id = _ParseId(element);
+
         if (id is null)
         {
             isAnon = retrievalUri is null;
             id = retrievalUri ?? repo.MakeRandomUri();
+        }
+        else
+        {
+            // If ID is not absolute, base it on the retrieval URI if available.
+            if (!id.IsAbsoluteUri && retrievalUri is not null)
+            {
+                id = new Uri(retrievalUri, id);
+            }
         }
 
         Assume
@@ -146,8 +155,8 @@ internal static class SchemaParser
                 ? propertyName switch
                 {
                     "$id" or "$schema" or "$comment" or "description" or "title"
-                        or "deprecated" or "readOnly" or "writeOnly" or "examples" => null, // ignored for validation purposes
-                    
+                        or "deprecated" or "readOnly" or "writeOnly" => null, // ignored for validation purposes
+
                     "type" => propertyValue switch
                     {
                         { ValueKind: JsonValueKind.String } => _GetAssertionForType(propertyValue.ExpectString(), element),
@@ -253,6 +262,8 @@ internal static class SchemaParser
                     // Vocabulary
                     "$vocabulary" => _ParseVocabulary(propertyValue.ExpectObject(), baseSchema),
 
+                    "examples" => await _ParseExamples(outerSchema, baseSchema, dialect, propertyValue, ptb),
+
                     _ => await _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect),
                 }
             : await _ParseSubSchema(propertyValue, outerSchema, baseSchema, ptb, dialect, true);
@@ -274,6 +285,14 @@ internal static class SchemaParser
             .ToArray();
 
         return AndCombinedAssertion.From(finalAssertions);
+    }
+
+    private static async Task<Assertion?> _ParseExamples(JsonSchema outerSchema, JsonSchema baseSchema, Dialect dialect, JsonElement propertyValue, JsonPointer ptb)
+    {
+        var examples = propertyValue.ExpectArray();
+        _ = await examples.SelectArray((e, i) => _ParseSubSchema(e, outerSchema, baseSchema, ptb.AppendIndex(i), dialect));
+
+        return null;
     }
 
     private static void _Blubb2020(List<Assertion> assertions)
