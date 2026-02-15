@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -25,7 +25,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="TestData/**/*.json">
+		<None Include="..\JSON-Schema-Test-Suite\tests\**\*.json" Link="TestSuite\tests\%(RecursiveDir)%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\JSON-Schema-Test-Suite\remotes\**\*" Link="TestSuite\remotes\%(RecursiveDir)%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

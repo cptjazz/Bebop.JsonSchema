@@ -1,11 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using Tests.Bebop.JsonSchema.Infrastructure;
 
 namespace Tests.MyJsonSchema;
 
 public sealed class Draft202012OptionalTestData : TestDataBase, IEnumerable<object[]>
 {
-    private const string TestDataPath = "TestData/draft2020-12/optional";
+    private const string TestDataPath = "TestSuite/tests/draft2020-12/optional";
 
     public IEnumerator<object[]> GetEnumerator()
     {

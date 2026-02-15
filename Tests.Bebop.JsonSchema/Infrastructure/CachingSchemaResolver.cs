@@ -28,7 +28,7 @@ public sealed class CachingSchemaResolver : ISchemaResolver
     private JsonElement? ResolveLocalFile(Uri id)
     {
         var file = id.PathAndQuery;
-        var path = Path.Join(AppContext.BaseDirectory, "TestData/remotes", file);
+        var path = Path.Join(AppContext.BaseDirectory, "TestSuite/remotes", file);
 
         if (!File.Exists(path))
             return null;

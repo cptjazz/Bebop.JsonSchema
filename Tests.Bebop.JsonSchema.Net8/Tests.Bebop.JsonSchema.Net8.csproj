@@ -30,9 +30,12 @@
 		<Compile Include="..\Tests.Bebop.JsonSchema\Infrastructure\*.cs" Link="Infrastructure\%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<!-- Link TestData folder -->
+	<!-- Link JSON-Schema-Test-Suite submodule -->
 	<ItemGroup>
-		<None Include="..\Tests.Bebop.JsonSchema\TestData\**\*.json" Link="TestData\%(RecursiveDir)%(Filename)%(Extension)">
+		<None Include="..\JSON-Schema-Test-Suite\tests\**\*.json" Link="TestSuite\tests\%(RecursiveDir)%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\JSON-Schema-Test-Suite\remotes\**\*" Link="TestSuite\remotes\%(RecursiveDir)%(Filename)%(Extension)">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
