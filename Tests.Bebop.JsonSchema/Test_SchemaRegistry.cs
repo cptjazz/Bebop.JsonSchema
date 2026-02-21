@@ -177,6 +177,96 @@ public class Test_SchemaRegistry
         Assert.Same(schema, result);
     }
 
+    [Fact]
+    public async Task Resolving_GetSchema_FetchesFromHttp()
+    {
+        var schemaUri = new Uri("http://example.com/test.json");
+        using var handler = new FakeHttpHandler(schemaUri, """{"type":"integer"}""");
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var schema = await registry.GetSchema(schemaUri);
+
+        Assert.NotNull(schema);
+    }
+
+    [Fact]
+    public async Task Resolving_GetSchema_CachesAfterFirstFetch()
+    {
+        var schemaUri = new Uri("http://example.com/cached.json");
+        using var handler = new FakeHttpHandler(schemaUri, """{"$id":"http://example.com/cached.json","type":"string"}""");
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var first = await registry.GetSchema(schemaUri);
+        var second = await registry.GetSchema(schemaUri);
+
+        Assert.NotNull(first);
+        Assert.Same(first, second);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Resolving_GetSchema_ReturnsNull_ForNon200Response()
+    {
+        var schemaUri = new Uri("http://example.com/missing.json");
+        using var handler = new FakeHttpHandler(schemaUri, statusCode: System.Net.HttpStatusCode.NotFound);
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var result = await registry.GetSchema(schemaUri);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task Resolving_GetSchema_ReturnsNull_ForInvalidJson()
+    {
+        var schemaUri = new Uri("http://example.com/bad.json");
+        using var handler = new FakeHttpHandler(schemaUri, "not json at all {{{");
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var result = await registry.GetSchema(schemaUri);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task Resolving_EndToEnd_RefResolutionOverHttp()
+    {
+        var referencedUri = new Uri("http://example.com/defs/string.json");
+        using var handler = new FakeHttpHandler(referencedUri, """{"type":"string"}""");
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var doc = JsonDocument.Parse("""{"$ref":"http://example.com/defs/string.json"}""");
+        var schema = await JsonSchema.Create(doc, registry);
+        await schema.Prepare();
+
+        var errors = new ErrorCollection();
+        Assert.True(await schema.Validate(JsonDocument.Parse(""" "hello" """), errors));
+        Assert.False(await schema.Validate(JsonDocument.Parse("42"), errors));
+    }
+
+    [Fact]
+    public async Task Resolving_AddSchema_PreventsFetch()
+    {
+        var schemaUri = new Uri("http://example.com/prefilled.json");
+        using var handler = new FakeHttpHandler(schemaUri, """{"type":"number"}""");
+        using var httpClient = new HttpClient(handler);
+        var registry = SchemaRegistry.Resolving(httpClient);
+
+        var preloaded = await JsonSchema.Create(
+            """{"$id":"http://example.com/prefilled.json","type":"string"}""");
+        registry.AddSchema(preloaded);
+
+        var result = await registry.GetSchema(schemaUri);
+
+        Assert.Same(preloaded, result);
+        Assert.Equal(0, handler.CallCount);
+    }
+
     // ── MakeRandomUri ───────────────────────────────────────────────
 
     [Fact]
@@ -274,6 +364,44 @@ public class Test_SchemaRegistry
         {
             CallCount++;
             return ValueTask.FromResult<JsonElement?>(_element);
+        }
+    }
+
+    private sealed class FakeHttpHandler : HttpMessageHandler
+    {
+        private readonly Uri _expectedUri;
+        private readonly string? _responseBody;
+        private readonly System.Net.HttpStatusCode _statusCode;
+
+        public int CallCount { get; private set; }
+
+        public FakeHttpHandler(
+            Uri expectedUri,
+            string? responseBody = null,
+            System.Net.HttpStatusCode statusCode = System.Net.HttpStatusCode.OK)
+        {
+            _expectedUri = expectedUri;
+            _responseBody = responseBody;
+            _statusCode = statusCode;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+
+            if (request.RequestUri != _expectedUri || _responseBody is null)
+            {
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+            }
+
+            var response = new HttpResponseMessage(_statusCode)
+            {
+                Content = new StringContent(_responseBody, System.Text.Encoding.UTF8, "application/json")
+            };
+
+            return Task.FromResult(response);
         }
     }
 }
