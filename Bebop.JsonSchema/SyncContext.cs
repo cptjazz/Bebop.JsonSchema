@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Bebop.JsonSchema;
 
+[ExcludeFromCodeCoverage]
 internal static class SyncContext
 {
     public static ClearContextAwaiter Drop() => default;
