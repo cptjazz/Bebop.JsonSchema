@@ -5,17 +5,27 @@
 
 A high-performance JSON Schema validator for .NET, built on top of `System.Text.Json`.
 
+## Supported JSON Schema Versions
+
+| Version | Status |
+|---|---|
+| Draft 2020-12 | ✅ Fully supported (default) |
+| Draft 2019-09 | ✅ Fully supported |
+| Draft-07 | ❌ Not supported |
+| Draft-06 | ❌ Not supported |
+| Draft-04 | ❌ Not supported |
+
+When no `$schema` is specified, Draft 2020-12 is assumed.
+Custom meta-schemas are supported — define your own vocabularies and dialects on top of Draft 2020-12 or 2019-09.
+
 ## Features
 
-- **JSON Schema Draft 2020-12** — full support for the latest JSON Schema specification
-- **JSON Schema Draft 2019-09** — support for the previous draft
-- **Custom meta-schemas** — define and use your own vocabularies and dialects
 - **Zero-allocation validation path** — designed with performance in mind; minimal allocations on the hot path
 - **Built on `System.Text.Json`** — no third-party JSON parser dependencies
 - **Async-first API** — schema creation, preparation, and validation are all async
 - **`$ref` and `$dynamicRef` resolution** — local, HTTP-resolving, and custom schema registries
-- **Format validation** — built-in validators for `email`, `ipv4`, `ipv6`, `uri`, `uuid`, `date-time`, `date`, `time`, `duration`, and more
-- **Comprehensive keyword support** — type, enum, const, allOf/anyOf/oneOf/not, if/then/else, properties, patternProperties, additionalProperties, items, prefixItems, contains, uniqueItems, unevaluatedProperties, unevaluatedItems, dependentSchemas, dependentRequired, and all validation keywords
+- **Format validation** — built-in validators for `email`, `ipv4`, `ipv6`, `uri`, `uuid`, `date-time`, `date`, `time`, `duration`, and more. In Draft 2020-12 and 2019-09, `format` is annotation-only by default and becomes an assertion when the `format-assertion` vocabulary is active.
+- **Comprehensive keyword support** — type, enum, const, allOf/anyOf/oneOf/not, if/then/else, properties, patternProperties, additionalProperties, items, prefixItems, contains, uniqueItems, unevaluatedProperties, unevaluatedItems, dependentSchemas, dependentRequired, dependencies, and all validation keywords
 
 ## Targets
 
