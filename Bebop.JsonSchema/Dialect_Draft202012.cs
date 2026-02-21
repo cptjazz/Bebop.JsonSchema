@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 
 namespace Bebop.JsonSchema;
 
@@ -126,5 +126,23 @@ internal sealed class Dialect_Draft202012 : Dialect
             Vocabularies_Draft202012.Validation => ValidationKeywords,
             _ => throw new InvalidOperationException($"Unable to get keyword set for the given URI: '{vocabularyUri.AbsoluteUri}'"),
         };
+    }
+
+    public override bool TryGetKeywordSet(Uri vocabularyUri, out IReadOnlySet<string> keywordSet)
+    {
+        keywordSet = vocabularyUri.AbsoluteUri switch
+        {
+            Vocabularies_Draft202012.Core => CoreKeywords,
+            Vocabularies_Draft202012.Applicator => ApplicatorKeywords,
+            Vocabularies_Draft202012.Content => ContentKeywords,
+            Vocabularies_Draft202012.FormatAnnotation => FormatAnnotationKeywords,
+            Vocabularies_Draft202012.FormatAssertion => FormatAnnotationKeywords,
+            Vocabularies_Draft202012.Metadata => MetaDataKeywords,
+            Vocabularies_Draft202012.Unevaluated => UnevaluatedKeywords,
+            Vocabularies_Draft202012.Validation => ValidationKeywords,
+            _ => null!,
+        };
+
+        return keywordSet is not null;
     }
 }

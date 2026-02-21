@@ -1,4 +1,4 @@
-﻿namespace Bebop.JsonSchema;
+namespace Bebop.JsonSchema;
 
 internal abstract class Dialect
 {
@@ -32,6 +32,9 @@ internal abstract class Dialect
 
     public abstract IReadOnlySet<string> GetKeywordSet(Uri vocabularyUri);
 
+    public abstract bool TryGetKeywordSet(Uri vocabularyUri, out IReadOnlySet<string> keywordSet);
+
     public virtual bool IsDraft202012 => false;
     public virtual bool IsDraft201909 => false;
+    public virtual bool IsFormatAssertion => false;
 }

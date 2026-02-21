@@ -1,4 +1,4 @@
-﻿using System.Collections.Frozen;
+using System.Collections.Frozen;
 
 namespace Bebop.JsonSchema;
 
@@ -10,13 +10,20 @@ internal sealed class CustomDialect : Dialect
     {
         _baseDialect = baseDialect;
         var keywords = new HashSet<string>();
-        
+
         if (schema.Vocabulary is not null)
         {
             foreach (var vocabUri in schema.Vocabulary)
             {
-                var kws = GetKeywordSet(vocabUri);
+                if (!_baseDialect.TryGetKeywordSet(vocabUri, out var kws))
+                    continue;
+
                 keywords.UnionWith(kws);
+
+                if (vocabUri.AbsoluteUri == Vocabularies_Draft202012.FormatAssertion)
+                {
+                    IsFormatAssertion = true;
+                }
             }
         }
 
@@ -25,8 +32,15 @@ internal sealed class CustomDialect : Dialect
 
     override public IReadOnlySet<string> SupportedKeywords { get; }
 
+    public override bool IsFormatAssertion { get; }
+
     public override IReadOnlySet<string> GetKeywordSet(Uri vocabularyUri)
     {
         return _baseDialect.GetKeywordSet(vocabularyUri);
+    }
+
+    public override bool TryGetKeywordSet(Uri vocabularyUri, out IReadOnlySet<string> keywordSet)
+    {
+        return _baseDialect.TryGetKeywordSet(vocabularyUri, out keywordSet);
     }
 }

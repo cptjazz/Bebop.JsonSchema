@@ -118,4 +118,20 @@ internal sealed class Dialect_Draft201909 : Dialect
             _ => throw new InvalidOperationException($"Unable to get keyword set for the given URI: '{vocabularyUri.AbsoluteUri}'"),
         };
     }
+
+    public override bool TryGetKeywordSet(Uri vocabularyUri, out IReadOnlySet<string> keywordSet)
+    {
+        keywordSet = vocabularyUri.AbsoluteUri switch
+        {
+            Vocabularies_Draft201909.Core => CoreKeywords,
+            Vocabularies_Draft201909.Applicator => ApplicatorKeywords,
+            Vocabularies_Draft201909.Content => ContentKeywords,
+            Vocabularies_Draft201909.FormatAnnotation => FormatAnnotationKeywords,
+            Vocabularies_Draft201909.Metadata => MetaDataKeywords,
+            Vocabularies_Draft201909.Validation => ValidationKeywords,
+            _ => null!,
+        };
+
+        return keywordSet is not null;
+    }
 }

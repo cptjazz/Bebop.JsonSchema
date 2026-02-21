@@ -56,12 +56,13 @@ internal static class SchemaParser
         JsonSchema outerSchema, 
         JsonSchema baseSchema, 
         JsonPointer pathToBase,
-        Dialect baseDialect)
+        Dialect baseDialect,
+        bool ignoreId = false)
     {
         var repo = outerSchema.Repository;
         var anchors = outerSchema.Anchors;
 
-        var idLiteral = _ParseId(element);
+        var idLiteral = ignoreId ? null : _ParseId(element);
         var id = idLiteral ?? repo.MakeRandomUri();
         var isNamed = idLiteral is not null;
 
@@ -156,6 +157,8 @@ internal static class SchemaParser
                 {
                     "$id" or "$schema" or "$comment" or "description" or "title"
                         or "deprecated" or "readOnly" or "writeOnly" => null, // ignored for validation purposes
+
+                    "$defs" => await _ParseDefs(propertyValue, outerSchema, baseSchema, ptb, dialect),
 
                     "type" => propertyValue switch
                     {
@@ -255,7 +258,9 @@ internal static class SchemaParser
                             x => ParseSchema(x.Value, outerSchema, baseSchema, ptb.AppendPropertyName(x.Name), dialect))),
 
                     // Format
-                    "format" => null, // TODO: new FormatAssertion(Formats.Get(propertyValue.ExpectString())),
+                    "format" => dialect.IsFormatAssertion
+                        ? new FormatAssertion(Formats.Get(propertyValue.ExpectString()))
+                        : null,
 
                     "dependencies" => await _ParseDependencies(propertyValue, outerSchema, baseSchema, ptb, dialect),
 
@@ -285,6 +290,21 @@ internal static class SchemaParser
             .ToArray();
 
         return AndCombinedAssertion.From(finalAssertions);
+    }
+
+    private static async Task<Assertion?> _ParseDefs(
+        JsonElement propertyValue,
+        JsonSchema outerSchema,
+        JsonSchema baseSchema,
+        JsonPointer ptb,
+        Dialect dialect)
+    {
+        foreach (var def in propertyValue.ExpectObject().EnumerateObject())
+        {
+            await _ParseSubSchema(def.Value, outerSchema, baseSchema, ptb.AppendPropertyName(def.Name), dialect);
+        }
+
+        return null;
     }
 
     private static async Task<Assertion?> _ParseExamples(JsonSchema outerSchema, JsonSchema baseSchema, Dialect dialect, JsonElement propertyValue, JsonPointer ptb)
@@ -361,12 +381,12 @@ internal static class SchemaParser
         foreach (var vocab in propertyValue.ExpectObject().EnumerateObject())
         {
             var vocabUri = new Uri(vocab.Name, UriKind.Absolute);
-            var isRequired = vocab.Value.ExpectBoolean();
+            vocab.Value.ExpectBoolean();
 
-            if (isRequired)
-            {
-                validVocabularies.Add(vocabUri);
-            }
+            // All declared vocabularies are included regardless of the required flag.
+            // The flag only indicates whether the implementation MUST support the vocabulary;
+            // optional (false) vocabularies are still used when the implementation supports them.
+            validVocabularies.Add(vocabUri);
         }
 
         baseSchema.Vocabulary = validVocabularies;
@@ -506,7 +526,7 @@ internal static class SchemaParser
         }
 
         await SyncContext.Drop();
-        var s = await ParseSchema(element, outerSchema, baseSchema, pathToBase, dialect);
+        var s = await ParseSchema(element, outerSchema, baseSchema, pathToBase, dialect, ignoreId: tolerateInvalidSchema);
         baseSchema.Anchors.AddAnonymousAnchor(pathToBase, s);
 
         return null;
