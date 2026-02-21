@@ -2,6 +2,7 @@
 
 [![Build and Test](https://github.com/cptjazz/Bebop.JsonSchema/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cptjazz/Bebop.JsonSchema/actions/workflows/build-and-test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/cptjazz/Bebop.JsonSchema/badge.svg?branch=main)](https://coveralls.io/github/cptjazz/Bebop.JsonSchema?branch=main)
+[![NuGet](https://img.shields.io/nuget/v/Bebop.JsonSchema.svg)](https://www.nuget.org/packages/Bebop.JsonSchema/)
 
 A high-performance JSON Schema validator for .NET, built on top of `System.Text.Json`.
 
@@ -33,6 +34,16 @@ Custom meta-schemas are supported — define your own vocabularies and dialects 
 |-----------|-----------|
 | .NET 8    | ✅        |
 | .NET 10   | ✅        |
+
+## Installation
+
+Install via NuGet:
+
+```bash
+dotnet add package Bebop.JsonSchema
+```
+
+Or visit the [NuGet package page](https://www.nuget.org/packages/Bebop.JsonSchema/).
 
 ## Getting Started
 
