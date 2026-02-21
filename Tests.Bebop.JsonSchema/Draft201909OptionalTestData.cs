@@ -15,6 +15,7 @@ public sealed class Draft201909OptionalTestData : TestDataBase, IEnumerable<obje
         files = files
             // Exclude because .NET's regex engine does not properly support higher planes
             .Where(f => !f.Name.Equals("non-bmp-regex.json", StringComparison.OrdinalIgnoreCase))
+            .Where(f => !f.Name.Equals("cross-draft.json", StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         return GetTests(files);

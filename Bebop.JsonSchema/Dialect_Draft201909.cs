@@ -41,6 +41,7 @@ internal sealed class Dialect_Draft201909 : Dialect
         "propertyNames",
         "unevaluatedItems",
         "unevaluatedProperties",
+        "dependencies",
     };
 
     public IReadOnlySet<string> ContentKeywords { get; } = new HashSet<string>
