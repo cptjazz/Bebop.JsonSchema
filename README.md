@@ -119,6 +119,29 @@ The following `format` values are validated when the format vocabulary is active
 
 `email` · `idn-email` · `ipv4` · `ipv6` · `uri` · `uuid` · `date-time` · `date` · `time` · `duration`
 
+## Performance
+
+Benchmarks validate a realistic **Person** object (nested objects, arrays, `$ref`, `$defs`,
+`pattern`, `format`, `additionalProperties`, `if`/`then`) against a ~230-line Draft 2020-12 schema.
+Compared against [JsonSchema.Net](https://www.nuget.org/packages/JsonSchema.Net) v8.0.4.
+
+``` ini
+BenchmarkDotNet v0.15.8, Windows 11
+Intel Core i7-6560U CPU 2.20GHz (Skylake), 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.103
+```
+
+| Method | Runtime | Mean | Allocated |
+|---|---|---:|---:|
+| **Bebop.JsonSchema** | .NET 10.0 | **42.3 μs** | **31.2 KB** |
+| JsonSchema.Net | .NET 10.0 | 109.4 μs | 78.0 KB |
+| **Bebop.JsonSchema** | .NET 9.0 | **40.6 μs** | **31.5 KB** |
+| JsonSchema.Net | .NET 9.0 | 110.6 μs | 78.9 KB |
+
+**~2.6× faster** and **~60 % less memory** than JsonSchema.Net on the same workload.
+
+> Reproduce locally: `dotnet run --project Benchmarks.Bebop.JsonSchema -c Release`
+
 ## Project Structure
 
 ```

@@ -54,3 +54,4 @@ coverage-report/
 TestResult.xml
 nunit-*.xml
 /.vs
+BenchmarkDotNet.Artifacts
