@@ -195,10 +195,10 @@ public class Test_ErrorCollection
         // Should have at least one error
         if (errors.Count > 0)
         {
-            var hasPathWithNested = errors.Any(e => e.Path.Contains("nested") || e.Path.Contains("value"));
             // Path should reference the nested structure
             // Note: exact path format depends on implementation
-            Assert.True(hasPathWithNested || errors.Count > 0);
+            var hasPathWithNested = errors.Any(e => e.Path.Contains("nested") || e.Path.Contains("value"));
+            Assert.True(hasPathWithNested);
         }
     }
 

@@ -14,6 +14,7 @@ public sealed record ValidationError(string Message, JsonElement Element, string
 public class ErrorCollection : IReadOnlyList<ValidationError>
 {
     private readonly List<(string Error, JsonElement Element, JsonPointer Path)> _errors = new(13);
+    private List<ValidationError>? _cachedErrors;
 
     /// <summary>
     /// Gets the number of validation errors in the collection.
@@ -29,14 +30,15 @@ public class ErrorCollection : IReadOnlyList<ValidationError>
     {
         get
         {
-            var error = _errors[index];
-            return new ValidationError(error.Error, error.Element, error.Path.ToString());
+            EnsureCachedErrors();
+            return _cachedErrors![index];
         }
     }
 
     internal virtual void AddError(string error, in Token element)
     {
         _errors.Add((error, element.Element, element.ElementPath));
+        _cachedErrors = null; // Invalidate cache when errors are added
     }
 
     /// <summary>
@@ -45,15 +47,25 @@ public class ErrorCollection : IReadOnlyList<ValidationError>
     /// <returns>An enumerator for the validation errors.</returns>
     public IEnumerator<ValidationError> GetEnumerator()
     {
-        foreach (var error in _errors)
-        {
-            yield return new ValidationError(error.Error, error.Element, error.Path.ToString());
-        }
+        EnsureCachedErrors();
+        return _cachedErrors!.GetEnumerator();
     }
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    private void EnsureCachedErrors()
+    {
+        if (_cachedErrors == null)
+        {
+            _cachedErrors = new List<ValidationError>(_errors.Count);
+            foreach (var error in _errors)
+            {
+                _cachedErrors.Add(new ValidationError(error.Error, error.Element, error.Path.ToString()));
+            }
+        }
     }
 }
 
