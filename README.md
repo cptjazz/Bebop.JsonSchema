@@ -85,6 +85,13 @@ using var doc = JsonDocument.Parse("""{ "name": "", "age": -1 }""");
 var errors = new ErrorCollection();
 bool isValid = await schema.Validate(doc.RootElement, errors);
 // isValid == false
+
+// Access validation errors
+Console.WriteLine($"Found {errors.Count} validation errors:");
+foreach (var error in errors)
+{
+    Console.WriteLine($"  - {error.Message} at {error.Path}");
+}
 ```
 
 ### Use a remote-resolving schema registry
