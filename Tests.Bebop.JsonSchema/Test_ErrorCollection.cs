@@ -239,6 +239,6 @@ public class Test_ErrorCollection
             count++;
         }
         
-        Assert.Empty(errors);
+        Assert.Equal(0, count);
     }
 }
