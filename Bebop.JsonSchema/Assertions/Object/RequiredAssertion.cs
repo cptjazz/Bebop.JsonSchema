@@ -1,10 +1,14 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
 {
+    private readonly (string Name, byte[] Utf8Name)[] _entries =
+        requiredProperties.Select(n => (n, Encoding.UTF8.GetBytes(n))).ToArray();
+
     public override ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         JsonElement el = element.Element;
@@ -16,11 +20,11 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
 
         bool isValid = true;
 
-        foreach (var propertyName in requiredProperties)
+        foreach (var (name, utf8Name) in _entries)
         {
-            if (!el.TryGetProperty(propertyName, out _))
+            if (!el.TryGetProperty(utf8Name, out _))
             {
-                _AddError(element, errorCollection, propertyName);
+                _AddError(element, errorCollection, name);
                 isValid = false;
             }
         }
@@ -36,5 +40,5 @@ internal sealed class RequiredAssertion(string[] requiredProperties) : Assertion
 
     [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"required ({requiredProperties.Length} properties)";
+    private string DebuggerDisplay => $"required ({_entries.Length} properties)";
 }

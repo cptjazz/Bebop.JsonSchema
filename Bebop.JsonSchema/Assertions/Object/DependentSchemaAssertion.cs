@@ -1,10 +1,14 @@
 using System.Collections.Frozen;
+using System.Text;
 
 namespace Bebop.JsonSchema.Assertions.Object;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSchema> properties) : Assertion
 {
+    private readonly (string Name, byte[] Utf8Name, JsonSchema Schema)[] _entries =
+        properties.Select(kvp => (kvp.Key, Encoding.UTF8.GetBytes(kvp.Key), kvp.Value)).ToArray();
+
     public override async ValueTask<bool> Assert(Token element, EvaluationState evaluationState, ErrorCollection errorCollection)
     {
         if (element.Element.ValueKind != JsonValueKind.Object) 
@@ -12,9 +16,9 @@ internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSche
 
         var isValid = true;
 
-        foreach (var (name, schema) in properties)
+        foreach (var (name, utf8Name, schema) in _entries)
         {
-            if (element.Element.TryGetProperty(name, out _))
+            if (element.Element.TryGetProperty(utf8Name, out _))
             {
                 if (!await schema.Validate(element, evaluationState, errorCollection).ConfigureAwait(false))
                 {
@@ -31,7 +35,7 @@ internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSche
     {
         await SyncContext.Drop();
 
-        foreach (var (_, schema) in properties)
+        foreach (var (_, _, schema) in _entries)
         {
             await schema.Prepare();
         }
@@ -39,5 +43,5 @@ internal sealed class DependentSchemaAssertion(FrozenDictionary<string, JsonSche
 
     [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"dependentSchemas ({properties.Count} schemas)";
+    private string DebuggerDisplay => $"dependentSchemas ({_entries.Length} schemas)";
 }
