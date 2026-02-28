@@ -142,7 +142,7 @@ internal readonly struct JsonPointer : IEquatable<JsonPointer>
 
     internal JsonPointer AppendPropertyName(string segment)
     {
-        return new JsonPointer(string.Concat(_pointer, "/", segment), _hc ^ segment.GetHashCode());
+        return new JsonPointer(string.Concat(_pointer, "/", segment.AsSpan()), _hc ^ segment.GetHashCode());
     }
 
     public JsonPointer AppendIndex(int idx)
