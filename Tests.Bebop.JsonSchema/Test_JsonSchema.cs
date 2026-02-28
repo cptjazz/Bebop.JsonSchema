@@ -127,6 +127,25 @@ public class Test_JsonSchema
         Assert.False(await JsonSchema.False.Validate(JsonDocument.Parse("null"), errors));
     }
 
+    // ── MinMaxLength ────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData("\"ab\"", true)]
+    [InlineData("\"abc\"", true)]
+    [InlineData("\"abcde\"", true)]
+    [InlineData("\"a\"", false)]
+    [InlineData("\"abcdef\"", false)]
+    public async Task Validate_MinMaxLength_EnforcesLengthBounds(string json, bool expected)
+    {
+        var schema = await JsonSchema.Create("""{"type":"string","minLength":2,"maxLength":5}""");
+        await schema.Prepare();
+
+        var errors = new ErrorCollection();
+        var result = await schema.Validate(JsonDocument.Parse(json), errors);
+
+        Assert.Equal(expected, result);
+    }
+
     // ── Metadata ────────────────────────────────────────────────────
 
     [Fact]
