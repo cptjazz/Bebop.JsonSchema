@@ -6,6 +6,8 @@ namespace Bebop.JsonSchema.Assertions.String;
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class MaxLengthAssertion(int maxLength) : StringAssertion
 {
+    public int Value => maxLength;
+
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         var si = new StringInfo(text);

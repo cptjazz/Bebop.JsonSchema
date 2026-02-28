@@ -4,27 +4,26 @@ using System.Runtime.CompilerServices;
 namespace Bebop.JsonSchema.Assertions.String;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-internal sealed class MinLengthAssertion(int minLength) : StringAssertion
+internal sealed class MinMaxLengthAssertion(int minLength, int maxLength) : StringAssertion
 {
-    public int Value => minLength;
-
     public override bool AssertProperty(string text, in Token element, ErrorCollection errorCollection)
     {
         var si = new StringInfo(text);
-        if (si.LengthInTextElements >= minLength)
+        int l = si.LengthInTextElements;
+        if (l <= maxLength && l >= minLength)
             return true;
 
-        return _AddError(errorCollection, element, minLength);
+        return _AddError(errorCollection, element, minLength, maxLength);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static bool _AddError(ErrorCollection ec, in Token e, int m)
+        static bool _AddError(ErrorCollection ec, in Token e, int mi, int ma)
         {
-            ec.AddError($"String length is less than minimum length of {m}.", e);
+            ec.AddError($"String length is not between {mi} and {ma}.", e);
             return false;
         }
     }
 
     [ExcludeFromCodeCoverage]
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"len(string) >= {minLength}";
+    private string DebuggerDisplay => $"{minLength} <= len(string) <= {maxLength}";
 }

@@ -285,6 +285,17 @@ internal static class SchemaParser
         if (dialect.IsDraft201909)
              _Blubb2019(assertions);
 
+        var minLengthAssertion = assertions.OfType<MinLengthAssertion>().FirstOrDefault();
+        var maxLengthAssertion = assertions.OfType<MaxLengthAssertion>().FirstOrDefault();
+
+        if (minLengthAssertion is not null && maxLengthAssertion is not null)
+        {
+            var combined = new MinMaxLengthAssertion(minLengthAssertion.Value, maxLengthAssertion.Value);
+            assertions.Remove(minLengthAssertion);
+            assertions.Remove(maxLengthAssertion);
+            assertions.Add(combined);
+        }
+
         var finalAssertions = assertions
             .OrderBy(x => x.Order)
             .ToArray();
