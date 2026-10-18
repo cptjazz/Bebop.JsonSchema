@@ -11,10 +11,10 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '10.0'
     
@@ -28,7 +28,7 @@ jobs:
       run: dotnet pack Bebop.JsonSchema/Bebop.JsonSchema.csproj --no-build --configuration Release --output ./nupkg
     
     - name: Upload NuGet package artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: nuget-packages
         path: ./nupkg/
@@ -38,4 +38,3 @@ jobs:
     
     - name: Push to GitHub Packages
       run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ github.token }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-
