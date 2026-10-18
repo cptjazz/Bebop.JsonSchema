@@ -31,29 +31,14 @@ jobs:
       run: dotnet build --no-restore --configuration Release
     
     - name: Run tests with coverage
-      run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" -- --coverage --coverage-output coverage.cobertura.xml --coverage-output-format cobertura
-    
-    - name: Install ReportGenerator
-      if: matrix.dotnet-version == '10.0'
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool
-    
-    - name: Generate coverage report
-      if: matrix.dotnet-version == '10.0'
-      run: reportgenerator -reports:Tests.Bebop.JsonSchema/bin/Release/net10.0/TestResults/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Html
-    
-    - name: Upload coverage report
-      if: matrix.dotnet-version == '10.0'
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: coverage-report/
+      run: dotnet test --no-build --configuration Release --verbosity normal --results-directory TestResults -- --coverage --coverage-output coverage.cobertura.xml --coverage-output-format cobertura --report-trx
     
     - name: Upload coverage to Coveralls
       if: matrix.dotnet-version == '10.0'
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        file: Tests.Bebop.JsonSchema/bin/Release/net10.0/TestResults/coverage.cobertura.xml
+        file: TestResults/coverage.cobertura.xml
         format: cobertura
     
     - name: Upload test results
