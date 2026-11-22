@@ -6,8 +6,10 @@ using BenchmarkDotNet.Jobs;
 namespace Benchmarks.Bebop.JsonSchema;
 
 [MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net10_0)]
+[SimpleJob(RuntimeMoniker.Net11_0)]
 public class ValidationBenchmarks
 {
     private JsonDocument? _personTestData1;
